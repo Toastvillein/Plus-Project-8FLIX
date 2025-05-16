@@ -10,10 +10,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Entity
-@RequiredArgsConstructor
+@NoArgsConstructor
 @Getter
 @Table(name = "food")
 public class Food extends BaseEntity {
