@@ -42,7 +42,17 @@ public class FoodService {
 			() -> new BizException(FoodErrorCode.INVALID_ID)
 		);
 
-		food.updateFood(request.name(),request.quantity(),request.foodstatus());
+		if(request.name() != null){
+			food.updateName(request.name());
+		}
+
+		if(request.quantity() != null){
+			food.updateQuantity(request.quantity());
+		}
+
+		if(request.foodstatus() != null){
+			food.updateFoodStatus(request.foodstatus());
+		}
 
 		return FoodSaveResponse.from(food);
 	}

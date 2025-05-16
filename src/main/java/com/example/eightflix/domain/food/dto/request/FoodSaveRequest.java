@@ -10,8 +10,8 @@ public record FoodSaveRequest(
 	@Min(3)
 	@NotBlank
 	String name,
-	@Min(1)
-	@NotBlank
+	@NotNull
+	@Min(0)
 	int quantity,
 	@NotNull
 	FoodStatus foodstatus
