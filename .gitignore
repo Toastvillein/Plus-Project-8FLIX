@@ -1,9 +1,12 @@
 HELP.md
 .gradle
 build/
+build.gradle
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+
+infra/redis/data/dump.rdb
 
 ### STS ###
 .apt_generated
