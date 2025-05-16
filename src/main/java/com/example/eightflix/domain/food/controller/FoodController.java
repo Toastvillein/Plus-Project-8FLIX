@@ -1,7 +1,10 @@
 package com.example.eightflix.domain.food.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,6 +41,14 @@ public class FoodController {
 		FoodSaveResponse foodSaveResponse = foodService.updateFood(request);
 
 		return ResponseEntity.status(HttpStatus.OK).body(foodSaveResponse);
+	}
+
+	@GetMapping
+	public ResponseEntity<List<FoodSaveResponse>> findAllFoods(){
+
+		List<FoodSaveResponse> allFoods = foodService.findAllFoods();
+
+		return ResponseEntity.status(HttpStatus.OK).body(allFoods);
 	}
 
 }

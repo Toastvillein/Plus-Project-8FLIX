@@ -1,6 +1,8 @@
 package com.example.eightflix.domain.food.service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,5 +57,12 @@ public class FoodService {
 		}
 
 		return FoodSaveResponse.from(food);
+	}
+
+	public List<FoodSaveResponse> findAllFoods() {
+		return  foodRepository.findAll().stream()
+			.map(food -> new FoodSaveResponse(
+				food.getId(),food.getName(),food.getQuantity(),food.getFoodStatus()))
+			.toList();
 	}
 }
