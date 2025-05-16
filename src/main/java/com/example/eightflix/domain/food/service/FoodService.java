@@ -65,4 +65,12 @@ public class FoodService {
 				food.getId(),food.getName(),food.getQuantity(),food.getFoodStatus()))
 			.toList();
 	}
+
+	public void deleteFood(Long foodId) {
+		Food food = foodRepository.findById(foodId).orElseThrow(
+			() -> new BizException(FoodErrorCode.INVALID_ID)
+		);
+
+		food.softDelete();
+	}
 }
