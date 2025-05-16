@@ -36,4 +36,10 @@ public class Food extends BaseEntity {
 		this.quantity = quantity;
 		this.foodStatus = foodStatus;
 	}
+
+	public void updateFood(String name, int quantity, FoodStatus foodStatus){
+		this.name = name;
+		this.quantity = quantity;
+		this.foodStatus = foodStatus;
+	}
 }
