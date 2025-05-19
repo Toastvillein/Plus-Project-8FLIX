@@ -28,6 +28,7 @@ public class Cart extends BaseEntity {
 	private Long id;
 
 	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn("userId")
 	private User user;
 
 	@OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
