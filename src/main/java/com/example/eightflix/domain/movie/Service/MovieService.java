@@ -6,6 +6,7 @@ import com.example.eightflix.domain.movie.Entity.Movie;
 import com.example.eightflix.domain.movie.Repository.MovieRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ public class MovieService {
 
     private final MovieRepository movieRepository;
 
+    @Transactional
     public MovieResponseDto createMovie(MovieRequestDto requestDto) {
         Movie movie = new Movie(requestDto.getName());
         Movie saved = movieRepository.save(movie);
