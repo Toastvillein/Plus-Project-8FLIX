@@ -1,5 +1,8 @@
 package com.example.eightflix.domain.food.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.example.eightflix.global.entity.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -9,6 +12,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +36,9 @@ public class Food extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private FoodStatus foodStatus;
+
+	@OneToMany(mappedBy = "food")
+	private List<CartItem> cartItems = new ArrayList<>();
 
 	public Food(String name, int quantity, FoodStatus foodStatus) {
 		this.name = name;
