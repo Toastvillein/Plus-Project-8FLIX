@@ -59,6 +59,7 @@ public class FoodService {
 		return FoodSaveResponse.from(food);
 	}
 
+	@Transactional(readOnly = true)
 	public List<FoodSaveResponse> findAllFoods() {
 		return  foodRepository.findAll().stream()
 			.map(food -> new FoodSaveResponse(
@@ -66,6 +67,7 @@ public class FoodService {
 			.toList();
 	}
 
+	@Transactional
 	public void deleteFood(Long foodId) {
 		Food food = foodRepository.findById(foodId).orElseThrow(
 			() -> new BizException(FoodErrorCode.INVALID_ID)
