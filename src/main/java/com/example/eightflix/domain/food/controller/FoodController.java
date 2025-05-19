@@ -13,11 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.eightflix.domain.food.dto.request.FoodSaveRequest;
 import com.example.eightflix.domain.food.dto.request.FoodUpdateRequest;
-import com.example.eightflix.domain.food.dto.response.FoodSaveResponse;
+import com.example.eightflix.domain.food.dto.response.FoodResponse;
 import com.example.eightflix.domain.food.service.FoodService;
 
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -28,25 +27,25 @@ public class FoodController {
 	private final FoodService foodService;
 
 	@PostMapping
-	public ResponseEntity<FoodSaveResponse> saveFood(@Valid @RequestBody FoodSaveRequest request){
+	public ResponseEntity<FoodResponse> saveFood(@Valid @RequestBody FoodSaveRequest request){
 
-		FoodSaveResponse foods = foodService.saveFood(request);
+		FoodResponse foods = foodService.saveFood(request);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(foods);
 	}
 
 	@PatchMapping
-	public ResponseEntity<FoodSaveResponse> updateFood(@Valid @RequestBody FoodUpdateRequest request){
+	public ResponseEntity<FoodResponse> updateFood(@Valid @RequestBody FoodUpdateRequest request){
 
-		FoodSaveResponse foodSaveResponse = foodService.updateFood(request);
+		FoodResponse foodResponse = foodService.updateFood(request);
 
-		return ResponseEntity.status(HttpStatus.OK).body(foodSaveResponse);
+		return ResponseEntity.status(HttpStatus.OK).body(foodResponse);
 	}
 
 	@GetMapping
-	public ResponseEntity<List<FoodSaveResponse>> findAllFoods(){
+	public ResponseEntity<List<FoodResponse>> findAllFoods(){
 
-		List<FoodSaveResponse> allFoods = foodService.findAllFoods();
+		List<FoodResponse> allFoods = foodService.findAllFoods();
 
 		return ResponseEntity.status(HttpStatus.OK).body(allFoods);
 	}
