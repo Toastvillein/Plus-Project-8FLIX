@@ -1,11 +1,14 @@
 package com.example.eightflix.domain.user.entity;
 
+import com.example.eightflix.domain.food.entity.Cart;
 import com.example.eightflix.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -34,6 +37,10 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "cart_id")
+    private Cart cart;
+
     @Builder
     public User(String nickname, String email, String userId, String password, String phoneNumber, UserRole role) {
         this.nickname = nickname;
@@ -42,5 +49,6 @@ public class User extends BaseEntity {
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.role = role;
+        this.cart = new Cart();
     }
 }

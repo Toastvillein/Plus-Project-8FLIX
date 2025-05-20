@@ -14,10 +14,4 @@ public class CartService {
 
 	private final CartRepository cartRepository;
 
-	public void createCart(User user){
-
-		Cart cart = new Cart(user);
-
-		cartRepository.save(user);
-	}
 }
