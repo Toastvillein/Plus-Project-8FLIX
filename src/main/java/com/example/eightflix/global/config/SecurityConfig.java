@@ -16,15 +16,13 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
 	@Bean
-	public PasswordEncoder passwordEncoder(){
-		return new BCryptPasswordEncoder();
-	}
-
-	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
-
+		http
+				.csrf((auth) -> auth.disable())
+				.authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/**").permitAll()
+                        .anyRequest().authenticated());
 		return http.build();
 	}
-
 
 }
