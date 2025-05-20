@@ -2,12 +2,14 @@ services:
   mysql:
     image: mysql:latest
     environment:
-      MYSQL_DATABASE: 'dishpatch'
+      MYSQL_DATABASE: 'eightflix'
       MYSQL_USER: 'testuser'
       MYSQL_PASSWORD: 'testpass'
       MYSQL_ROOT_PASSWORD: 'root'
     ports:
       - '3306:3306'
+    volumes:
+      - ./mysql/data:/var/lib/mysql
   redis:
     image: redis:latest
     ports:

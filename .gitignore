@@ -5,6 +5,8 @@ build.gradle
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+infra/mysql/data/*
+!infra/mysql/data/.keep
 
 infra/redis/data/dump.rdb
 
