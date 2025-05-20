@@ -66,6 +66,6 @@ public class ReviewController {
     ){
         Long userId = Long.valueOf(authentication.getName());
         reviewService.deleteReview(userId, reviewid);
-        return ResponseEntity.ok();
+        return ResponseEntity.ok().build();
     }
 }

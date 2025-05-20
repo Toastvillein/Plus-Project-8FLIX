@@ -61,26 +61,9 @@ public class FoodService {
 
 
 	@Transactional(readOnly = true)
-	public List<FoodSaveResponse> findAllFoods() {
+	public List<FoodResponse> findAllFoods() {
 		return  foodRepository.findAll().stream()
 			.map(food -> new FoodResponse(
-				food.getId(),food.getName(),food.getQuantity(),food.getFoodStatus()))
-			.toList();
-	}
-
-	@Transactional
-	public void deleteFood(Long foodId) {
-		Food food = foodRepository.findById(foodId).orElseThrow(
-			() -> new BizException(FoodErrorCode.INVALID_ID)
-		);
-
-		food.softDelete();
-	}
-
-	@Transactional(readOnly = true)
-	public List<FoodSaveResponse> findAllFoods() {
-		return  foodRepository.findAll().stream()
-			.map(food -> new FoodSaveResponse(
 				food.getId(),food.getName(),food.getQuantity(),food.getFoodStatus()))
 			.toList();
 	}
