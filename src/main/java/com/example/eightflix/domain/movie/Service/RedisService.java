@@ -1,4 +1,4 @@
-package com.example.eightflix.domain.movie.service;
+package com.example.eightflix.domain.movie.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

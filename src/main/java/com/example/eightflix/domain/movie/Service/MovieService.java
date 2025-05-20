@@ -1,4 +1,4 @@
-package com.example.eightflix.domain.movie.service;
+package com.example.eightflix.domain.movie.Service;
 
 import com.example.eightflix.domain.movie.dto.MovieRequestDto;
 import com.example.eightflix.domain.movie.dto.MovieResponseDto;

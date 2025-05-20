@@ -2,7 +2,7 @@ package com.example.eightflix.domain.movie.controller;
 
 import com.example.eightflix.domain.movie.dto.MovieRequestDto;
 import com.example.eightflix.domain.movie.dto.MovieResponseDto;
-import com.example.eightflix.domain.movie.service.MovieService;
+import com.example.eightflix.domain.movie.Service.MovieService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
