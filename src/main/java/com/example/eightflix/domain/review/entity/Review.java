@@ -19,10 +19,10 @@ public class Review extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JoinColumn(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @JoinColumn(name = "movie_id")
+    @Column(name = "movie_id", nullable = false)
     private Long movieId;
 
     @Column(nullable = false ,length = 300)
