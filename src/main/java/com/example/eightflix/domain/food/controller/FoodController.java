@@ -59,21 +59,4 @@ public class FoodController {
 
 		return ResponseEntity.status(HttpStatus.OK).build();
 	}
-
-	@GetMapping
-	public ResponseEntity<List<FoodSaveResponse>> findAllFoods(){
-
-		List<FoodSaveResponse> allFoods = foodService.findAllFoods();
-
-		return ResponseEntity.status(HttpStatus.OK).body(allFoods);
-	}
-
-	@DeleteMapping("{foodId}")
-	public ResponseEntity<Void> deleteFood(@PathVariable Long foodId){
-
-		foodService.deleteFood(foodId);
-
-		return ResponseEntity.status(HttpStatus.OK).build();
-	}
-
 }
