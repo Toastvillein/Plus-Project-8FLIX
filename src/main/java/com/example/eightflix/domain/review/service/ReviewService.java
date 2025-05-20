@@ -3,9 +3,9 @@ package com.example.eightflix.domain.review.service;
 import com.example.eightflix.domain.review.dto.ReviewRequest;
 import com.example.eightflix.domain.review.dto.ReviewResponse;
 import com.example.eightflix.domain.review.entity.Review;
-import com.example.eightflix.domain.review.exception.ReviewErrorCode;
 import com.example.eightflix.domain.review.repository.ReviewRepository;
 import com.example.eightflix.global.exception.BizException;
+import com.example.eightflix.global.exception.CommonErrorCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class ReviewService {
 
         //같은 유저가 같은 영화에 리뷰 한번 쓸 수 있음
         if(reviewRepository.existsReviewByUserIdAndMovieId(userId, movieId)){
-            throw new BizException(ReviewErrorCode.DUPLICATE_REVIEW);
+            throw new BizException(CommonErrorCode.DUPLICATE_REVIEW);
         }
         Review review = Review.builder()
                 .userId(userId)
@@ -45,9 +45,9 @@ public class ReviewService {
 
     @Transactional
     public ReviewResponse patchReview(Long userId, Long movieId, Long reviewId, ReviewRequest request){
-        Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->new BizException(ReviewErrorCode.REVIEW_NOT_FOUND));
+        Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->new BizException(CommonErrorCode.REVIEW_NOT_FOUND));
         if(!findReview.getUserId().equals(userId)){
-            throw new BizException(ReviewErrorCode.REVIEW_OWNER_MISMATCH);
+            throw new BizException(CommonErrorCode.REVIEW_OWNER_MISMATCH);
         }
         findReview.updateReview(request);
         return ReviewResponse.from(findReview);
@@ -57,7 +57,7 @@ public class ReviewService {
     public void deleteReview(Long userId, Long reviewId){
         Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->null);
         if(!findReview.getUserId().equals(userId)){
-            throw new BizException(ReviewErrorCode.REVIEW_OWNER_MISMATCH);
+            throw new BizException(CommonErrorCode.REVIEW_OWNER_MISMATCH);
         }
         findReview.softDelete();
     }
