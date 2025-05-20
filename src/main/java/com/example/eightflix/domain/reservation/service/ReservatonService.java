@@ -2,10 +2,12 @@ package com.example.eightflix.domain.reservation.service;
 
 import static com.example.eightflix.domain.movie.exception.MovieErrorCode.*;
 import static com.example.eightflix.domain.reservation.exception.ReservationErrorCode.*;
+import static com.example.eightflix.domain.user.exception.UserErrorCode.*;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.eightflix.domain.movie.entity.Movie;
 import com.example.eightflix.domain.movie.repository.MovieRepository;
@@ -15,6 +17,7 @@ import com.example.eightflix.domain.reservation.entity.Seat;
 import com.example.eightflix.domain.reservation.repository.ReservationRepository;
 import com.example.eightflix.domain.reservation.repository.SeatRepository;
 import com.example.eightflix.domain.user.entity.User;
+import com.example.eightflix.domain.user.repository.UserRepository;
 import com.example.eightflix.global.exception.BizException;
 
 import lombok.RequiredArgsConstructor;
@@ -24,15 +27,19 @@ import lombok.RequiredArgsConstructor;
 public class ReservatonService {
 	private final MovieRepository movieRepository;
 	private final SeatRepository seatRepository;
+	private final UserRepository userRepository;
 	private final ReservationRepository reservationRepository;
 
 	private static final int MIN_SEAT_COUNT = 1;
 	private static final int MAX_SEAT_COUNT = 5;
 
-	public void reserveMovie(User user, ReservationRequest reservationRequest) {
+	@Transactional
+	public void reserveMovie(Long userId, ReservationRequest reservationRequest) {
 		// movieId 검증
 		Movie movie = movieRepository.findById(reservationRequest.movieId())
 			.orElseThrow(() -> new BizException(MOVIE_NOT_FOUND));
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new BizException(USER_NOT_FOUND));
 
 		List<Seat> validSeats =
 			seatRepository.findValidSeatCodes(reservationRequest.reservationSeats(), reservationRequest.movieId());
@@ -44,6 +51,7 @@ public class ReservatonService {
 			.user(user)
 			.movie(movie)
 			.build();
+		reservationRepository.save(reservation);
 
 		for (Seat seat : validSeats) {
 			seat.updateReservation(reservation);
