@@ -30,6 +30,4 @@ spring:
   batch.job.enabled: false
 
 jwt:
-  secret: ${JWT_SECRET:default-secret}
-  access-token-expiration: 3600000
-  refresh-token-expiration: 604800000
+  secret: ${JWT_SECRET:ry0zFKeOas8RVd8CmmmDytMCgj4Xp7Qm8kVOh2SmV+k=}
