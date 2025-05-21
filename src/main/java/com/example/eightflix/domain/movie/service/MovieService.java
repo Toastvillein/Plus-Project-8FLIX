@@ -4,6 +4,8 @@ import com.example.eightflix.domain.movie.dto.MovieRequestDto;
 import com.example.eightflix.domain.movie.dto.MovieResponseDto;
 import com.example.eightflix.domain.movie.entity.Movie;
 import com.example.eightflix.domain.movie.repository.MovieRepository;
+import com.example.eightflix.domain.movie.exception.MovieErrorCode;
+import com.example.eightflix.global.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -32,13 +34,13 @@ public class MovieService {
     @CacheEvict(value = "movie", key = "#id")
     public MovieResponseDto updateMovie(Long id, MovieRequestDto requestDto) {
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
+                .orElseThrow(() -> new BizException(MovieErrorCode.MOVIE_NOT_FOUND));
 
         movie.updateName(requestDto.getName());
         return new MovieResponseDto(movie.getMovieId(), movie.getName());
     }
 
-    @Cacheable(value = "movie::all")
+    @Cacheable(value = "movie", key = "'all'")
     public List<MovieResponseDto> getAllMovies() {
         List<Movie> result = new ArrayList<>();
 
@@ -72,7 +74,7 @@ public class MovieService {
     @Cacheable(value = "movie", key = "#id")
     public MovieResponseDto getMovie(Long id) {
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
+                .orElseThrow(() -> new BizException(MovieErrorCode.MOVIE_NOT_FOUND));
 
         // 조회수 증가 및 최고 조회수 영화 갱신
         redisService.incrementViewCount(id);
@@ -85,7 +87,7 @@ public class MovieService {
     @CacheEvict(value = "movie", key = "#id")
     public void deleteMovie(Long id) {
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
+                .orElseThrow(() -> new BizException(MovieErrorCode.MOVIE_NOT_FOUND));
         movieRepository.delete(movie);
     }
 }
