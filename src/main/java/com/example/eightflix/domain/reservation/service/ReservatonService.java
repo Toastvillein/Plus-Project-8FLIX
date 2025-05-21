@@ -6,6 +6,7 @@ import static com.example.eightflix.domain.user.exception.UserErrorCode.*;
 
 import java.util.List;
 
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class ReservatonService {
 	private final SeatRepository seatRepository;
 	private final UserRepository userRepository;
 	private final ReservationRepository reservationRepository;
+	private final ApplicationContext context;
 
 	private static final int MIN_SEAT_COUNT = 1;
 	private static final int MAX_SEAT_COUNT = 5;
@@ -41,6 +43,7 @@ public class ReservatonService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new BizException(USER_NOT_FOUND));
 
+		// 좌석 검증
 		List<Seat> validSeats =
 			seatRepository.findValidSeatCodes(reservationRequest.reservationSeats(), reservationRequest.movieId());
 		validateSeatCount(reservationRequest.reservationSeats().size());  // 좌석 개수 제한

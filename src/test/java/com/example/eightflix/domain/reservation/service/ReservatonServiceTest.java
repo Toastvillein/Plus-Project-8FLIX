@@ -9,6 +9,7 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +30,7 @@ import com.example.eightflix.global.exception.BizException;
 @SpringBootTest
 class ReservatonServiceTest {
 	@Autowired
-	private ReservatonService reservationService;
+	private LockService lockService;
 
 	@Autowired
 	private MovieRepository movieRepository;
@@ -40,7 +41,7 @@ class ReservatonServiceTest {
 	@Autowired
 	private UserRepository userRepository;
 
-	private static final int THREAD_COUNT = 10;
+	private static final int THREAD_COUNT = 1000;
 
 	private Long movieId;
 	private Long userId;
@@ -60,6 +61,7 @@ class ReservatonServiceTest {
 		);
 		seatRepository.save(new Seat("A1", movie)); // A1 좌석
 		seatRepository.save(new Seat("A2", movie)); // A2 좌석
+		seatRepository.save(new Seat("A3", movie)); // A3 좌석
 
 		this.movieId = movie.getMovieId();
 		this.userId = user.getId();
@@ -75,19 +77,61 @@ class ReservatonServiceTest {
 		CyclicBarrier barrier = new CyclicBarrier(THREAD_COUNT);
 		CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
 
-		for (int i = 0; i < THREAD_COUNT; i++) {
+		IntStream.range(0, THREAD_COUNT).forEach(e -> executorService.submit(() -> {
+			try {
+				barrier.await(); // 모든 스레드가 여기서 대기하다가 동시에 실행됨
+
+				ReservationRequest request = new ReservationRequest(
+					movieId,
+					List.of("A1", "A2")
+				);
+
+				lockService.reserveMovieWithLock(userId, request);
+				successCount.getAndIncrement();  // 성공
+			} catch (BizException ex) {
+				if (ex.getErrorCode().getCode().equals("ALREADY_RESERVED_SEAT_ERROR")) {
+					failCount.getAndIncrement(); // 좌석 중복 오류
+				}
+				throw ex;
+			} catch (BrokenBarrierException | InterruptedException ex) {
+				throw new RuntimeException(ex);
+			} finally {
+				latch.countDown();
+			}
+		}));
+
+		latch.await(); // 모든 스레드 종료 대기
+		executorService.shutdown();
+
+		System.out.println("성공: " + successCount + ", 실패: " + failCount);
+		assertThat(successCount.get()).isEqualTo(1);
+		assertThat(failCount.get()).isEqualTo(THREAD_COUNT - 1);
+	}
+
+	@Test
+	@DisplayName("겹치는 영화 좌석 예매 시 동시성 제어에 성공한다.")
+	void reserveDuplicateSeatConcurrencyTest() throws Exception {
+		AtomicInteger successCount = new AtomicInteger();
+		AtomicInteger failCount = new AtomicInteger();
+
+		ExecutorService executorService = Executors.newFixedThreadPool(2);
+		CyclicBarrier barrier = new CyclicBarrier(2);
+		CountDownLatch latch = new CountDownLatch(2);
+
+		List<ReservationRequest> requests = List.of(
+			new ReservationRequest(movieId, List.of("A1", "A2")),
+			new ReservationRequest(movieId, List.of("A2", "A3"))
+		);
+
+		for (int i = 0; i < 2; i++) {
+			int finalI = i;
 			executorService.submit(() -> {
 				try {
 					barrier.await(); // 모든 스레드가 여기서 대기하다가 동시에 실행됨
-
-					ReservationRequest request = new ReservationRequest(
-						movieId,
-						List.of("A1", "A2")
-					);
-
-					reservationService.reserveMovie(userId, request);
+					lockService.reserveMovieWithLock(userId, requests.get(finalI));
 					successCount.getAndIncrement();  // 성공
 				} catch (BizException e) {
+					System.out.println(e.getErrorCode().getCode());
 					if (e.getErrorCode().getCode().equals("ALREADY_RESERVED_SEAT_ERROR")) {
 						failCount.getAndIncrement(); // 좌석 중복 오류
 					}
@@ -107,4 +151,5 @@ class ReservatonServiceTest {
 		assertThat(successCount.get()).isEqualTo(1);
 		assertThat(failCount.get()).isEqualTo(THREAD_COUNT - 1);
 	}
+
 }

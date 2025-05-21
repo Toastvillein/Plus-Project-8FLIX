@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.eightflix.domain.reservation.dto.request.ReservationRequest;
-import com.example.eightflix.domain.reservation.service.ReservatonService;
+import com.example.eightflix.domain.reservation.service.LockService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,13 +13,13 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 public class ReservationController {
-	private final ReservatonService reservationService;
+	private final LockService lockService;
 
 	@PostMapping("/reservations")
 	public void reserveMovie(
 		// @AuthenticationPrincipal User user,
 		@Valid @RequestBody ReservationRequest reservationRequest
-	) {
-		reservationService.reserveMovie(1L, reservationRequest);
+	) throws InterruptedException {
+		lockService.reserveMovieWithLock(1L, reservationRequest);
 	}
 }
