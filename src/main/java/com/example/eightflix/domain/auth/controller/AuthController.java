@@ -22,7 +22,7 @@ public class AuthController {
     @Value("${jwt.refresh-token-expiration}")
     private int refreshTokenExpiration;
 
-    @PostMapping("/api/signin")
+    @PostMapping("/api/auth/signin")
     public ResponseEntity<SignInResponse> signIn(@Valid @RequestBody SignInRequest signInRequest, HttpServletResponse response) {
         TokenPair tokenPair = authService.signIn(signInRequest);
         Cookie cookie = new Cookie("refreshToken", tokenPair.refreshToken());
