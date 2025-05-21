@@ -68,7 +68,7 @@ class ReservatonServiceTest {
 	}
 
 	@Test
-	@DisplayName("영화 좌석 예매 시 동시성 제어에 성공한다.")
+	@DisplayName("동일한 영화 좌석 예매 시 동시성 제어에 성공한다.")
 	void reserveMovieConcurrencyTest() throws Exception {
 		AtomicInteger successCount = new AtomicInteger();
 		AtomicInteger failCount = new AtomicInteger();
@@ -109,29 +109,28 @@ class ReservatonServiceTest {
 	}
 
 	@Test
-	@DisplayName("겹치는 영화 좌석 예매 시 동시성 제어에 성공한다.")
+	@DisplayName("일부만 겹치는 영화 좌석 예매 시 동시성 제어에 성공한다.")
 	void reserveDuplicateSeatConcurrencyTest() throws Exception {
 		AtomicInteger successCount = new AtomicInteger();
 		AtomicInteger failCount = new AtomicInteger();
 
-		ExecutorService executorService = Executors.newFixedThreadPool(2);
-		CyclicBarrier barrier = new CyclicBarrier(2);
-		CountDownLatch latch = new CountDownLatch(2);
+		ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
+		CyclicBarrier barrier = new CyclicBarrier(THREAD_COUNT);
+		CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
 
 		List<ReservationRequest> requests = List.of(
 			new ReservationRequest(movieId, List.of("A1", "A2")),
 			new ReservationRequest(movieId, List.of("A2", "A3"))
 		);
 
-		for (int i = 0; i < 2; i++) {
-			int finalI = i;
+		for (int i = 0; i < THREAD_COUNT; i++) {
+			int finalI = i%2;
 			executorService.submit(() -> {
 				try {
 					barrier.await(); // 모든 스레드가 여기서 대기하다가 동시에 실행됨
 					lockService.reserveMovieWithLock(userId, requests.get(finalI));
 					successCount.getAndIncrement();  // 성공
 				} catch (BizException e) {
-					System.out.println(e.getErrorCode().getCode());
 					if (e.getErrorCode().getCode().equals("ALREADY_RESERVED_SEAT_ERROR")) {
 						failCount.getAndIncrement(); // 좌석 중복 오류
 					}
@@ -149,7 +148,7 @@ class ReservatonServiceTest {
 
 		System.out.println("성공: " + successCount + ", 실패: " + failCount);
 		assertThat(successCount.get()).isEqualTo(1);
-		assertThat(failCount.get()).isEqualTo(THREAD_COUNT - 1);
+		assertThat(failCount.get()).isEqualTo(THREAD_COUNT-1);
 	}
 
 }

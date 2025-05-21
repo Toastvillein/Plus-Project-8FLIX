@@ -36,7 +36,7 @@ public class ReservatonService {
 	private static final int MAX_SEAT_COUNT = 5;
 
 	@Transactional
-	public void reserveMovie(Long userId, ReservationRequest reservationRequest) {
+	public Reservation reserveMovie(Long userId, ReservationRequest reservationRequest) {
 		// movieId 검증
 		Movie movie = movieRepository.findById(reservationRequest.movieId())
 			.orElseThrow(() -> new BizException(MOVIE_NOT_FOUND));
@@ -54,11 +54,8 @@ public class ReservatonService {
 			.user(user)
 			.movie(movie)
 			.build();
-		reservationRepository.save(reservation);
 
-		for (Seat seat : validSeats) {
-			seat.updateReservation(reservation);
-		}
+		return reservationRepository.save(reservation);
 	}
 
 	private static void validateSeats(List<Seat> validSeats, List<String> reservationSeats) {

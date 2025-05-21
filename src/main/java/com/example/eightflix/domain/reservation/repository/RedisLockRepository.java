@@ -1,6 +1,7 @@
 package com.example.eightflix.domain.reservation.repository;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,7 @@ public class RedisLockRepository {
 			.setIfAbsent(key, "lock", Duration.ofMillis(3_000));
 	}
 
-	public Boolean unlock(String key){
+	public Long unlock(List<String> key){
 		return redisTemplate.delete(key);
 	}
 }
