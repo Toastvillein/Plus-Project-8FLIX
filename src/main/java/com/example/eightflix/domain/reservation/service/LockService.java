@@ -27,6 +27,7 @@ public class LockService {
 	public void reserveMovieWithLock(Long userId, ReservationRequest reservationRequest) throws InterruptedException {
 		List<String> lockKeys = reservationRequest.reservationSeats().stream()
 			.map(seat -> "lock:seat:" + reservationRequest.movieId() + ":" + seat)
+			.sorted()
 			.toList();
 
 		// 트랜잭션 전에 좌석에 대한 모든 락을 먼저 획득

@@ -6,7 +6,6 @@ import static com.example.eightflix.domain.user.exception.UserErrorCode.*;
 
 import java.util.List;
 
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +29,6 @@ public class ReservatonService {
 	private final SeatRepository seatRepository;
 	private final UserRepository userRepository;
 	private final ReservationRepository reservationRepository;
-	private final ApplicationContext context;
 
 	private static final int MIN_SEAT_COUNT = 1;
 	private static final int MAX_SEAT_COUNT = 5;
