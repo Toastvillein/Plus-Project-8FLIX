@@ -61,4 +61,12 @@ public class CartItemService {
 
 		return allByCart.stream().map(ItemResponse::from).toList();
 	}
+
+	@Transactional
+	public void deleteItems(Long cartItemId) {
+		CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(
+			() -> new BizException(FoodErrorCode.INVALID_ID));
+
+		cartItemRepository.delete(cartItem);
+	}
 }
