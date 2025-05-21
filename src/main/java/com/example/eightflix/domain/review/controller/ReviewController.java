@@ -38,7 +38,7 @@ public class ReviewController {
     @GetMapping("movies/{movieId}/reviews")
     public ResponseEntity<Page<ReviewResponse>> findReviews(
             @PathVariable Long movieId,
-            @PageableDefault(page = 0, size = 10, direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
             ){
         Page<ReviewResponse> responses = reviewService.findReviews(movieId, pageable);
         return ResponseEntity.ok(responses);
