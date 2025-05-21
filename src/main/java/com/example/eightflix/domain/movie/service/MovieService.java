@@ -1,9 +1,9 @@
-package com.example.eightflix.domain.movie.Service;
+package com.example.eightflix.domain.movie.service;
 
-import com.example.eightflix.domain.movie.MovieDto.MovieRequestDto;
-import com.example.eightflix.domain.movie.MovieDto.MovieResponseDto;
-import com.example.eightflix.domain.movie.Entity.Movie;
-import com.example.eightflix.domain.movie.Repository.MovieRepository;
+import com.example.eightflix.domain.movie.dto.MovieRequestDto;
+import com.example.eightflix.domain.movie.dto.MovieResponseDto;
+import com.example.eightflix.domain.movie.entity.Movie;
+import com.example.eightflix.domain.movie.repository.MovieRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
