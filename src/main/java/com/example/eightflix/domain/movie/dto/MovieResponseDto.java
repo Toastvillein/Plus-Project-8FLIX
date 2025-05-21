@@ -1,4 +1,4 @@
-package com.example.eightflix.domain.movie.MovieDto;
+package com.example.eightflix.domain.movie.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

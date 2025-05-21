@@ -1,4 +1,4 @@
-package com.example.eightflix.domain.movie.Entity;
+package com.example.eightflix.domain.movie.entity;
 
 import jakarta.persistence.*;
 import jakarta.persistence.Entity;
