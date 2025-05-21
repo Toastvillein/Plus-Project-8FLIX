@@ -9,16 +9,16 @@ import org.springframework.stereotype.Service;
 public class RedisService {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private static final String VIEW_COUNT_PREFIX = "movie:viewcount:";
+    private static final String VIEW_COUNT_NUMBER = "movie:viewcount:";
     private static final String MOST_VIEWED_MOVIE_KEY = "movie:mostviewed";
 
     public void incrementViewCount(Long movieId) {
-        String key = VIEW_COUNT_PREFIX + movieId;
+        String key = VIEW_COUNT_NUMBER + movieId;
         redisTemplate.opsForValue().increment(key, 1);
     }
 
     public Long getViewCount(Long movieId) {
-        String key = VIEW_COUNT_PREFIX + movieId;
+        String key = VIEW_COUNT_NUMBER + movieId;
         Object value = redisTemplate.opsForValue().get(key);
         return value != null ? Long.parseLong(value.toString()) : 0L;
     }
