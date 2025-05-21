@@ -13,7 +13,8 @@ public enum FoodErrorCode implements ErrorCode {
 	INVALID_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 아이디입니다."),
 	INVALID_NAME(HttpStatus.BAD_REQUEST, "중복된 이름입니다."),
 	INVALID_FOODSTATUS(HttpStatus.BAD_REQUEST, "해당 상품의 재고가 없습니다."),
-	DUPLICATED_LIST(HttpStatus.BAD_REQUEST,"해당 상품이 장바구니에 이미 존재합니다.");
+	DUPLICATED_LIST(HttpStatus.BAD_REQUEST,"해당 상품이 장바구니에 이미 존재합니다."),
+	NO_CONTENTS(HttpStatus.NO_CONTENT,"장바구니가 비었습니다.");
 
 
 
