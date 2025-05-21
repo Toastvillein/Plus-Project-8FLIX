@@ -1,8 +1,10 @@
 package com.example.eightflix.domain.food.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,6 +19,10 @@ public interface CartItemRepository extends JpaRepository<CartItem,Long> {
 		+ "WHERE i.cart =:cart AND i.food = :food")
 	Optional<CartItem> findByCartAndFood(@Param("cart") Cart cart,@Param("food") Food food);
 
-	@Query("SELECT i FROM CartItem i JOIN FETCH i.food WHERE i.cart = :cart")
-	Optional<CartItem> findAllByCart(@Param("cart") Cart Cart);
+	@Query("SELECT i FROM CartItem i JOIN FETCH i.food WHERE i.cart.id = :cartId")
+	List<CartItem> findAllByCart(@Param("cartId") Long cartId);
+
+	@Modifying
+	@Query("DELETE FROM CartItem i WHERE i.cart.id = :cartId")
+	void deleteAllByCartId(Long cartId);
 }

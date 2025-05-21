@@ -26,6 +26,7 @@ public class CartItemService {
 	private final CartItemRepository cartItemRepository;
 	private final FoodRepository foodRepository;
 	private final CartRepository cartRepository;
+	private final FoodServiceUtil serviceUtil;
 
 	@Transactional
 	public ItemResponse createItems(Long foodId,Long cartId,int quantity) {
@@ -54,10 +55,8 @@ public class CartItemService {
 
 	@Transactional(readOnly = true)
 	public List<ItemResponse> findAllItems(Long cartId) {
-		Cart cart = cartRepository.findById(cartId).orElseThrow(
-			() -> new BizException(FoodErrorCode.INVALID_ID));
 
-		Optional<CartItem> allByCart = cartItemRepository.findAllByCart(cart);
+		List<CartItem> allByCart = cartItemRepository.findAllByCart(cartId);
 
 		return allByCart.stream().map(ItemResponse::from).toList();
 	}
@@ -68,5 +67,23 @@ public class CartItemService {
 			() -> new BizException(FoodErrorCode.INVALID_ID));
 
 		cartItemRepository.delete(cartItem);
+	}
+
+	@Transactional
+	public void foodPayment(Long cartId) {
+		List<CartItem> cartItems = cartItemRepository.findAllByCart(cartId);
+
+		if(cartItems.isEmpty()){
+			throw new BizException(FoodErrorCode.NO_CONTENTS);
+		}
+
+		for(CartItem cartItem : cartItems){
+			Food food = cartItem.getFood();
+			int quantity = cartItem.getQuantity();
+
+			serviceUtil.decreaseFood(food,quantity);
+		}
+
+		cartItemRepository.deleteAllByCartId(cartId);
 	}
 }
