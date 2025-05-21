@@ -39,7 +39,7 @@ public class ReservatonService {
 		Movie movie = movieRepository.findById(reservationRequest.movieId())
 			.orElseThrow(() -> new BizException(MOVIE_NOT_FOUND));
 		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new BizException(USER_NOT_FOUND));
+			.orElseThrow(() -> new BizException(NOT_FOUND_USER));
 
 		// 좌석 검증
 		List<Seat> validSeats =
