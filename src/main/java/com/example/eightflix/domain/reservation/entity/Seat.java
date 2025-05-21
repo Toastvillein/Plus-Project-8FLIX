@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -33,6 +34,12 @@ public class Seat extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "reservation_id")
 	private Reservation reservation;
+
+	@Builder
+	public Seat(String seatCode, Movie movie) {
+		this.seatCode = seatCode;
+		this.movie = movie;
+	}
 
 	public void updateReservation(Reservation reservation) {
 		this.reservation = reservation;
