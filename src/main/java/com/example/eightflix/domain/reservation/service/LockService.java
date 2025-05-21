@@ -30,10 +30,17 @@ public class LockService {
 			.sorted()
 			.toList();
 
+		int maxAttempts = 30;
+
 		// 트랜잭션 전에 좌석에 대한 모든 락을 먼저 획득
 		for (String key : lockKeys) {
+			int attempts = 0;
 			while (!redisLockRepository.lock(key)) {
 				Thread.sleep(100);
+				if (++attempts > maxAttempts) {
+					redisLockRepository.unlock(lockKeys); // 기존 락 해제
+					throw new BizException(ALREADY_RESERVED_SEAT_ERROR);
+				}
 			}
 		}
 
