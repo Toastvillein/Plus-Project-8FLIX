@@ -1,33 +1,47 @@
 package com.example.eightflix.domain.review.service;
 
+import com.example.eightflix.domain.review.dto.RestPage;
 import com.example.eightflix.domain.review.dto.ReviewRequest;
 import com.example.eightflix.domain.review.dto.ReviewResponse;
 import com.example.eightflix.domain.review.entity.Review;
 import com.example.eightflix.domain.review.exception.ReviewErrorCode;
 import com.example.eightflix.domain.review.repository.ReviewRepository;
 import com.example.eightflix.global.exception.BizException;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+
 @Service
-@CacheConfig(cacheManager = "reviewCacheManager")  // 이 서비스는 메모리 캐시를 사용함
-public class ReviewCacheService {
+public class ReviewRedisService {
 
     private final ReviewRepository reviewRepository;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
-    public ReviewCacheService(ReviewRepository reviewRepository) {
+    private final CacheManager cacheManager;
+
+    public void evictReviewsOfMovie(Long movieId) {
+        Set<String> keys = redisTemplate.keys("reviewRedisCacheStore::movieReviews:" + movieId + ":*");
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
+    }
+
+    public ReviewRedisService(ReviewRepository reviewRepository, CacheManager cacheManager) {
         this.reviewRepository = reviewRepository;
+        this.cacheManager = cacheManager;
     }
 
     @Transactional
-    @CacheEvict(value = "reviewCacheStore", key = "'movieReviews:' + #movieId + ':0'")
     public ReviewResponse saveReview(Long userId, Long movieId, ReviewRequest request){
 
         //같은 유저가 같은 영화에 리뷰 한번 쓸 수 있음
@@ -40,14 +54,15 @@ public class ReviewCacheService {
                 .contents(request.contents())
                 .rate(request.rate()).build();
         Review savedReview = reviewRepository.save(review);
-
+        evictReviewsOfMovie(movieId);
         return ReviewResponse.from(savedReview);
     }
 
-    @Cacheable(value = "reviewCacheStore", key = "'movieReviews:' + #movieId + ':' + #pageable.pageNumber")
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> findReviews(Long movieId, Pageable pageable){
-        return reviewRepository.findReviewByMovieId(movieId, pageable).map(ReviewResponse::from);
+    @Cacheable(value = "reviewRedisCacheStore", key = "'movieReviews:' + #movieId + ':' + #pageable.pageNumber")
+    public RestPage<ReviewResponse> findReviews(Long movieId, Pageable pageable){
+        Page<Review> reviews = reviewRepository.findReviewByMovieId(movieId, pageable);
+        return new RestPage<>(reviews.map(ReviewResponse::from));
     }
 
 
@@ -58,16 +73,18 @@ public class ReviewCacheService {
             throw new BizException(ReviewErrorCode.REVIEW_OWNER_MISMATCH);
         }
         findReview.updateReview(request);
+        evictReviewsOfMovie(movieId);
         return ReviewResponse.from(findReview);
     }
 
     @Transactional
-    @CacheEvict(value = "reviewCacheStore", allEntries = true)
     public void deleteReview(Long userId, Long reviewId){
         Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->new BizException(ReviewErrorCode.REVIEW_NOT_FOUND));
+        Long movieId = findReview.getMovieId();
         if(!findReview.getUserId().equals(userId)){
             throw new BizException(ReviewErrorCode.REVIEW_OWNER_MISMATCH);
         }
         findReview.softDelete();
+        evictReviewsOfMovie(movieId);
     }
 }
