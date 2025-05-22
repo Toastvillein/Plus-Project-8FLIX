@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MovieService {
 
+
     private final MovieRepository movieRepository;
     private final RedisService redisService;
 

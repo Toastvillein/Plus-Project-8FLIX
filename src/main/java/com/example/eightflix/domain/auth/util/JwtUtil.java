@@ -69,7 +69,7 @@ public class JwtUtil {
         if (StringUtils.hasText(tokenValue) && tokenValue.startsWith(BEARER_PREFIX)) {
             return tokenValue.substring(7);
         }
-        throw new BizException(AuthErrorCode.NOT_FOUND_TOKEN);
+        throw new BizException(AuthErrorCode.NOT_FOUND_ACCESS_TOKEN);
     }
 
     public Claims extractClaims(String token) {

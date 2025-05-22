@@ -23,7 +23,7 @@ public class ReviewController {
     }
 
     //리뷰 생성
-    @PostMapping("movies/{movieId}/reviews")
+    @PostMapping("/movies/{movieId}/reviews")
     public ResponseEntity<ReviewResponse> saveReview(
             @PathVariable Long movieId,
             @RequestBody ReviewRequest request,
@@ -35,17 +35,17 @@ public class ReviewController {
     }
 
     //리뷰 조회
-    @GetMapping("movies/{movieId}/reviews")
+    @GetMapping("/movies/{movieId}/reviews")
     public ResponseEntity<Page<ReviewResponse>> findReviews(
             @PathVariable Long movieId,
-            @PageableDefault(page = 0, size = 10, direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
             ){
         Page<ReviewResponse> responses = reviewService.findReviews(movieId, pageable);
         return ResponseEntity.ok(responses);
     }
 
     //리뷰 수정
-    @PatchMapping("movies/{movieId}/reviews/{reviewId}")
+    @PatchMapping("/movies/{movieId}/reviews/{reviewId}")
     public ResponseEntity<ReviewResponse> patchReview(
             @PathVariable Long movieId,
             @PathVariable Long reviewId,
@@ -58,7 +58,7 @@ public class ReviewController {
     }
 
     //리뷰 삭제
-    @DeleteMapping("movies/{moiveId}/reviews/{reviewid}")
+    @DeleteMapping("/movies/{moiveId}/reviews/{reviewid}")
     public ResponseEntity<Void> deleteReview(
             @PathVariable Long moiveId,
             @PathVariable Long reviewid,

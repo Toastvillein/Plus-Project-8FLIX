@@ -55,7 +55,7 @@ public class ReviewService {
 
     @Transactional
     public void deleteReview(Long userId, Long reviewId){
-        Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->null);
+        Review findReview = reviewRepository.findById(reviewId).orElseThrow(()->new BizException(ReviewErrorCode.REVIEW_NOT_FOUND));
         if(!findReview.getUserId().equals(userId)){
             throw new BizException(ReviewErrorCode.REVIEW_OWNER_MISMATCH);
         }
