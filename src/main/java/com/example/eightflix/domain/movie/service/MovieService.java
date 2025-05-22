@@ -9,11 +9,15 @@ import com.example.eightflix.global.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,7 +35,7 @@ public class MovieService {
     }
 
     @Transactional
-    @CacheEvict(value = "movie", key = "#id")
+    @CacheEvict(value = "movie", allEntries = true)
     public MovieResponseDto updateMovie(Long id, MovieRequestDto requestDto) {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new BizException(MovieErrorCode.MOVIE_NOT_FOUND));
@@ -83,6 +87,31 @@ public class MovieService {
         return new MovieResponseDto(movie.getMovieId(), movie.getName());
     }
 
+    // V1: 캐시 없음
+    public List<MovieResponseDto> searchMoviesV1(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Movie> result = movieRepository.findByNameContaining(keyword, pageable);
+        redisService.incrementKeywordSearchCount(keyword); // 인기 검색어 집계는 유지
+        return result.getContent().stream()
+                .map(m -> new MovieResponseDto(m.getMovieId(), m.getName()))
+                .collect(Collectors.toList());
+    }
+
+    // V2: Local Memory Cache 적용
+    @Cacheable(value = "searchCache", key = "#keyword + ':' + #page + ':' + #size")
+    public List<MovieResponseDto> searchMoviesV2(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Movie> result = movieRepository.findByNameContaining(keyword, pageable);
+        redisService.incrementKeywordSearchCount(keyword);
+        return result.getContent().stream()
+                .map(m -> new MovieResponseDto(m.getMovieId(), m.getName()))
+                .collect(Collectors.toList());
+    }
+
+    public Set<String> getTopKeywords(int limit) {
+        return redisService.getTopKeywords(limit);
+    }
+
     @Transactional
     @CacheEvict(value = "movie", key = "#id")
     public void deleteMovie(Long id) {
@@ -90,4 +119,5 @@ public class MovieService {
                 .orElseThrow(() -> new BizException(MovieErrorCode.MOVIE_NOT_FOUND));
         movieRepository.delete(movie);
     }
+
 }
