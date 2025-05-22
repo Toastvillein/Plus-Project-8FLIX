@@ -27,6 +27,9 @@ public class SecurityConfig {
 						.accessDeniedHandler(accessDeniedHandler)
 				)
 				.authorizeHttpRequests(auth -> auth
+						.requestMatchers("/api/auth/**").permitAll()
+						.requestMatchers("/api/admin/**").hasRole("ADMIN")
+						.requestMatchers("/api/foods/admin/**").hasRole("ADMIN")
 						.requestMatchers(SecurityUrlMatcher.REFRESH_URL).authenticated()
 						.requestMatchers(SecurityUrlMatcher.PUBLIC_URLS).permitAll()
 						.requestMatchers(SecurityUrlMatcher.ADMIN_URLS).hasRole("ADMIN")

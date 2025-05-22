@@ -10,17 +10,21 @@ import org.springframework.web.bind.annotation.Mapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.eightflix.domain.food.dto.request.ChangeQuantityRequest;
+import com.example.eightflix.domain.food.dto.response.ChangeQuantityResponse;
 import com.example.eightflix.domain.food.dto.response.ItemResponse;
 import com.example.eightflix.domain.food.service.CartItemService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/items")
+@RequestMapping("/api/items")
 @RequiredArgsConstructor
 public class CartItemController {
 
@@ -59,5 +63,15 @@ public class CartItemController {
 		cartItemService.foodPayment(cartId);
 
 		return ResponseEntity.status(HttpStatus.OK).build();
+	}
+
+	@PatchMapping("/{cartItemId}")
+	public ResponseEntity<ChangeQuantityResponse> changeQuantity(
+		@RequestBody ChangeQuantityRequest request,
+		@PathVariable Long cartItemId) {
+
+		ChangeQuantityResponse changedQuantity = cartItemService.changeQuantity(request, cartItemId);
+
+		return ResponseEntity.status(HttpStatus.OK).body(changedQuantity);
 	}
 }
