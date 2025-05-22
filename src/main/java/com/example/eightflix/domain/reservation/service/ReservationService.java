@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ReservatonService {
+public class ReservationService {
 	private final MovieRepository movieRepository;
 	private final SeatRepository seatRepository;
 	private final UserRepository userRepository;

@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LockService {
 	private final RedisLockRepository redisLockRepository;
-	private final ReservatonService reservatonService;
+	private final ReservationService reservatonService;
 	private final TransactionTemplate transactionTemplate;
 	private final SeatRepository seatRepository;
 

@@ -28,7 +28,7 @@ import com.example.eightflix.domain.user.repository.UserRepository;
 import com.example.eightflix.global.exception.BizException;
 
 @SpringBootTest
-class ReservatonServiceTest {
+class ReservationServiceTest {
 	@Autowired
 	private LockService lockService;
 
