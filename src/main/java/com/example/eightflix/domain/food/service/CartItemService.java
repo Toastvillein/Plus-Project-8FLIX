@@ -1,10 +1,12 @@
 package com.example.eightflix.domain.food.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.example.eightflix.domain.food.dto.response.CreateItemResponse;
+import com.example.eightflix.domain.food.dto.response.ItemResponse;
 import com.example.eightflix.domain.food.entity.Cart;
 import com.example.eightflix.domain.food.entity.CartItem;
 import com.example.eightflix.domain.food.entity.Food;
@@ -25,7 +27,8 @@ public class CartItemService {
 	private final FoodRepository foodRepository;
 	private final CartRepository cartRepository;
 
-	public CreateItemResponse createItems(Long foodId,Long cartId,int quantity) {
+	@Transactional
+	public ItemResponse createItems(Long foodId,Long cartId,int quantity) {
 		Food food = foodRepository.findById(foodId).orElseThrow(
 			() -> new BizException(FoodErrorCode.INVALID_ID));
 
@@ -46,6 +49,24 @@ public class CartItemService {
 
 		CartItem save = cartItemRepository.save(cartItem);
 
-		return new CreateItemResponse(food.getName(),quantity);
+		return ItemResponse.from(save);
+	}
+
+	@Transactional(readOnly = true)
+	public List<ItemResponse> findAllItems(Long cartId) {
+		Cart cart = cartRepository.findById(cartId).orElseThrow(
+			() -> new BizException(FoodErrorCode.INVALID_ID));
+
+		Optional<CartItem> allByCart = cartItemRepository.findAllByCart(cart);
+
+		return allByCart.stream().map(ItemResponse::from).toList();
+	}
+
+	@Transactional
+	public void deleteItems(Long cartItemId) {
+		CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(
+			() -> new BizException(FoodErrorCode.INVALID_ID));
+
+		cartItemRepository.delete(cartItem);
 	}
 }
