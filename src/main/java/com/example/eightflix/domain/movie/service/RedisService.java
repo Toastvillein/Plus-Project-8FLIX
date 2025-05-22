@@ -1,8 +1,13 @@
 package com.example.eightflix.domain.movie.service;
 
+import com.example.eightflix.domain.movie.entity.Movie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -11,6 +16,7 @@ public class RedisService {
     private final RedisTemplate<String, Object> redisTemplate;
     private static final String VIEW_COUNT_NUMBER = "movie:viewcount:";
     private static final String MOST_VIEWED_MOVIE_KEY = "movie:mostviewed";
+    private static final String SEARCH_KEYWORD_RANKING = "search:ranking";
 
     public void incrementViewCount(Long movieId) {
         String key = VIEW_COUNT_NUMBER + movieId;
@@ -24,7 +30,8 @@ public class RedisService {
     }
 
     public String getTopMovieId() {
-        return (String) redisTemplate.opsForValue().get(MOST_VIEWED_MOVIE_KEY);
+        Object result = redisTemplate.opsForValue().get(MOST_VIEWED_MOVIE_KEY);
+        return result != null ? result.toString() : null;
     }
 
     public void updateTopMovie(Long currentMovieId) {
@@ -37,4 +44,24 @@ public class RedisService {
             redisTemplate.opsForValue().set(MOST_VIEWED_MOVIE_KEY, currentMovieId.toString());
         }
     }
+
+    public void incrementKeywordSearchCount(String keyword) {
+        redisTemplate.opsForZSet().incrementScore(SEARCH_KEYWORD_RANKING, keyword, 1);
+    }
+
+    public Set<String> getTopKeywords(int limit) {
+        Set<Object> rawSet = redisTemplate.opsForZSet()
+                .reverseRange(SEARCH_KEYWORD_RANKING, 0, limit - 1);
+
+        // Object → String
+        return rawSet.stream()
+                .map(Object::toString)
+                .collect(Collectors.toSet());
+    }
+
+    public List<Movie> getCachedMovieList(String keyword, int page, int size) {
+        // 테스트용 임시 stub (mock에서 override 예정이므로 빈 리스트 반환)
+        return null;
+    }
+
 }
