@@ -3,67 +3,70 @@ package com.example.eightflix.movie;
 import com.example.eightflix.domain.movie.entity.Movie;
 import com.example.eightflix.domain.movie.repository.MovieRepository;
 import com.example.eightflix.domain.movie.service.MovieService;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
+import com.example.eightflix.domain.movie.service.RedisService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.data.domain.*;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
-@ExtendWith(MockitoExtension.class)
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 @SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@TestPropertySource(properties = "spring.cache.type=redis") // 캐시 적용 확인
+@ActiveProfiles("test")
 public class MovieTest {
 
     @Mock
     private MovieRepository movieRepository;
 
+    @Mock
+    private RedisService redisService;
+
     @InjectMocks
     private MovieService movieService;
 
-    @BeforeAll
-    void insertDummyDataOnce() {
-        if (movieRepository.count() >= 50000) return;
+    private Movie movie1;
 
-        List<Movie> movies = new ArrayList<>();
-        for (int i = 1; i <= 50000; i++) {
-            movies.add(new Movie("더미영화 " + i));
+    @BeforeEach
+    void setup() {
+        movie1 = new Movie("더미영화 1");
+    }
+
+    @Test
+    void searchMoviesV2_cacheTest() {
+        int total = 500;
+        Pageable pageable = PageRequest.of(0, 10);
+
+        List<Movie> dummyList = new ArrayList<>();
+        for (int i = 0; i < total; i++) {
+            dummyList.add(new Movie("더미영화 " + i));
         }
-        movieRepository.saveAll(movies);
-    }
 
-    @Test
-    @Order(1)
-    void searchMoviesV1_performanceTest() {
-        long start = System.currentTimeMillis();
+        Page<Movie> moviePage = new PageImpl<>(dummyList.subList(0, 10), pageable, total);
+        when(movieRepository.findByNameContaining("더미", pageable)).thenReturn(moviePage);
 
-        movieService.searchMoviesV1("더미", 0, 10);
-
-        long end = System.currentTimeMillis();
-        System.out.println("🔍 V1 실행 시간: " + (end - start) + "ms");
-    }
-
-    @Test
-    @Order(2)
-    void searchMoviesV2_performanceTest_first() {
-        // 첫 요청: 캐시 미적용 (warm-up)
+        // 첫 번째 호출 - DB 조회
+        long start1 = System.nanoTime();
         movieService.searchMoviesV2("더미", 0, 10);
-    }
+        long end1 = System.nanoTime();
 
-    @Test
-    @Order(3)
-    void searchMoviesV2_performanceTest_cached() {
-        long start = System.currentTimeMillis();
-
+        // 두 번째 호출 - 캐시 조회
+        long start2 = System.nanoTime();
         movieService.searchMoviesV2("더미", 0, 10);
+        long end2 = System.nanoTime();
 
-        long end = System.currentTimeMillis();
-        System.out.println("⚡ V2 (캐시) 실행 시간: " + (end - start) + "ms");
+        System.out.println("첫 번째 호출 시간(ms): " + (end1 - start1) / 1_000_000);
+        System.out.println("두 번째 호출 시간(ms): " + (end2 - start2) / 1_000_000);
+
+        verify(movieRepository, times(2)).findByNameContaining("더미", pageable);
     }
+
+
+
 }

@@ -1,9 +1,11 @@
 package com.example.eightflix.domain.movie.service;
 
+import com.example.eightflix.domain.movie.entity.Movie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -56,4 +58,10 @@ public class RedisService {
                 .map(Object::toString)
                 .collect(Collectors.toSet());
     }
+
+    public List<Movie> getCachedMovieList(String keyword, int page, int size) {
+        // 테스트용 임시 stub (mock에서 override 예정이므로 빈 리스트 반환)
+        return null;
+    }
+
 }
