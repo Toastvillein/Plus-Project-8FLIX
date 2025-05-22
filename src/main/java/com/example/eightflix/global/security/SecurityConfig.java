@@ -17,6 +17,7 @@ public class SecurityConfig {
 
 	private final JwtFilter jwtFilter;
 	private final CustomAccessDeniedHandler accessDeniedHandler;
+	private final RefreshTokenFilter refreshTokenFilter;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
@@ -29,8 +30,12 @@ public class SecurityConfig {
 						.requestMatchers("/api/auth/**").permitAll()
 						.requestMatchers("/api/admin/**").hasRole("ADMIN")
 						.requestMatchers("/api/foods/admin/**").hasRole("ADMIN")
+						.requestMatchers(SecurityUrlMatcher.REFRESH_URL).authenticated()
+						.requestMatchers(SecurityUrlMatcher.PUBLIC_URLS).permitAll()
+						.requestMatchers(SecurityUrlMatcher.ADMIN_URLS).hasRole("ADMIN")
 						.anyRequest().authenticated()
 				)
+				.addFilterBefore(refreshTokenFilter, UsernamePasswordAuthenticationFilter.class)
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();

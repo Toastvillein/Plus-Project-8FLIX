@@ -2,8 +2,7 @@ package com.example.eightflix.domain.review.controller;
 
 import com.example.eightflix.domain.review.dto.ReviewRequest;
 import com.example.eightflix.domain.review.dto.ReviewResponse;
-import com.example.eightflix.domain.review.service.ReviewService;
-import org.apache.coyote.Response;
+import com.example.eightflix.domain.review.service.ReviewRedisService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -13,14 +12,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api")
-public class ReviewController {
+@RequestMapping("/api/v2")
+public class ReviewRedisController {
+    private final ReviewRedisService reviewRedisService;
 
-    private final ReviewService reviewService;
-
-    public ReviewController(ReviewService reviewService) {
-        this.reviewService = reviewService;
+    public ReviewRedisController(ReviewRedisService reviewRedisService) {
+        this.reviewRedisService = reviewRedisService;
     }
+
 
     //리뷰 생성
     @PostMapping("/movies/{movieId}/reviews")
@@ -30,7 +29,7 @@ public class ReviewController {
             Authentication authentication
     ) {
         Long userId = Long.valueOf(authentication.getName());
-        ReviewResponse response = reviewService.saveReview(userId, movieId, request);
+        ReviewResponse response = reviewRedisService.saveReview(userId, movieId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -39,8 +38,8 @@ public class ReviewController {
     public ResponseEntity<Page<ReviewResponse>> findReviews(
             @PathVariable Long movieId,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-            ){
-        Page<ReviewResponse> responses = reviewService.findReviews(movieId, pageable);
+    ){
+        Page<ReviewResponse> responses = reviewRedisService.findReviews(movieId, pageable);
         return ResponseEntity.ok(responses);
     }
 
@@ -53,7 +52,7 @@ public class ReviewController {
             Authentication authentication
     ){
         Long userId = Long.valueOf(authentication.getName());
-        ReviewResponse response = reviewService.patchReview(userId, movieId, reviewId, request);
+        ReviewResponse response = reviewRedisService.patchReview(userId, movieId, reviewId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -65,7 +64,7 @@ public class ReviewController {
             Authentication authentication
     ){
         Long userId = Long.valueOf(authentication.getName());
-        reviewService.deleteReview(userId, reviewid);
+        reviewRedisService.deleteReview(userId, reviewid);
         return ResponseEntity.ok().build();
     }
 }

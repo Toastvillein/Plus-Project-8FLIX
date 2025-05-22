@@ -5,6 +5,8 @@ import com.example.eightflix.domain.review.dto.ReviewResponse;
 import com.example.eightflix.domain.review.entity.Review;
 import com.example.eightflix.domain.review.exception.ReviewErrorCode;
 import com.example.eightflix.domain.review.repository.ReviewRepository;
+import com.example.eightflix.domain.review.service.ReviewCacheService;
+import com.example.eightflix.domain.review.service.ReviewRedisService;
 import com.example.eightflix.domain.review.service.ReviewService;
 import com.example.eightflix.global.exception.BizException;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Testcontainers
@@ -43,6 +46,10 @@ public class ReviewTest {
             .withPassword("testpass");
     @Autowired
     private ReviewRepository reviewRepository;
+    @Autowired
+    private ReviewCacheService reviewCacheService;
+    @Autowired
+    private ReviewRedisService reviewRedisService;
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
@@ -154,4 +161,38 @@ public class ReviewTest {
 
     }
 
+
+
+    @Test
+    void 캐시적용하면빠를까(){
+        Long movieId = 1L;
+        int page = 0;
+        int size = 10;
+        Sort.Direction direction = Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page,size, Sort.by(direction, "createdAt"));
+        //캐시적용안함
+        long start = System.currentTimeMillis();
+        Page<ReviewResponse> responses = reviewService.findReviews(movieId, pageable);
+        long end = System.currentTimeMillis();
+
+        //로컬캐시적용
+        reviewCacheService.findReviews(movieId, pageable);
+        long startCache = System.currentTimeMillis();
+        reviewCacheService.findReviews(movieId, pageable);
+        long endCache = System.currentTimeMillis();
+
+        //레디스 적용
+        reviewRedisService.findReviews(movieId, pageable);
+        long startRedisCache = System.currentTimeMillis();
+        reviewRedisService.findReviews(movieId, pageable);
+        long endRedisCache = System.currentTimeMillis();
+        System.out.println("기본 : " + (end - start));
+        System.out.println("로컬 : " + (endCache - startCache));
+        System.out.println("레디스 : " + (endRedisCache - startRedisCache));
+
+
+        assertTrue(end - start > endCache - startCache);
+        assertTrue(end - start > endRedisCache - startRedisCache);
+
+    }
 }

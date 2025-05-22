@@ -26,4 +26,16 @@ public class RedisTokenRepository implements TokenRepository{
                 Duration.ofMillis(refreshTokenExpiration));
     }
 
+    @Override
+    public boolean isRefreshTokenValid(String id, String refreshToken) {
+        String key = "userId:" + id;
+        Object storedToken = redisTemplate.opsForValue().get(key);
+
+        return ("refreshToken:" + refreshToken).equals(String.valueOf(storedToken));
+    }
+
+    @Override
+    public void deleteRefreshToken(String id) {
+        redisTemplate.delete("userId:" + id);
+    }
 }
