@@ -25,15 +25,12 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
-public class LockService {
+public class LockService implements ReservationLockStrategy {
 	private final RedisLockRepository redisLockRepository;
 	private final ReservationService reservatonService;
 	private final SeatRepository seatRepository;
 	private final MovieRepository movieRepository;
 	private final UserRepository userRepository;
-
-	private static final int MIN_SEAT_COUNT = 1;
-	private static final int MAX_SEAT_COUNT = 5;
 
 	public void reserveMovie(Long userId, ReservationRequest reservationRequest) throws InterruptedException {
 		// movieId 검증
@@ -51,7 +48,7 @@ public class LockService {
 		reserveMovieWithLock(reservationRequest, user, movie);
 	}
 
-	public void reserveMovieWithLock(ReservationRequest reservationRequest, User user, Movie movie) throws InterruptedException {
+	private void reserveMovieWithLock(ReservationRequest reservationRequest, User user, Movie movie) throws InterruptedException {
 		List<String> lockKeys = reservationRequest.reservationSeats().stream()
 			.map(seat -> "lock:seat:" + reservationRequest.movieId() + ":" + seat)
 			.sorted()
@@ -78,23 +75,4 @@ public class LockService {
 			redisLockRepository.unlock(lockKeys);
 		}
 	}
-
-	private static void validateSeats(List<Seat> validSeats, List<String> reservationSeats) {
-		List<String> validSeatCodes = validSeats.stream()
-			.map(Seat::getSeatCode)
-			.toList();
-
-		for (String reservationSeat : reservationSeats) {
-			if (!validSeatCodes.contains(reservationSeat)) {
-				throw new BizException(UNAVAILABLE_SEAT_ERROR);
-			}
-		}
-	}
-
-	private static void validateSeatCount(int seatSize) {
-		if (seatSize > MAX_SEAT_COUNT || seatSize < MIN_SEAT_COUNT) {
-			throw new BizException(UNAVAILABLE_SEAT_COUNT_ERROR);
-		}
-	}
-
 }

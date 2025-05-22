@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.eightflix.domain.reservation.dto.request.ReservationRequest;
 import com.example.eightflix.domain.reservation.service.LockService;
 import com.example.eightflix.domain.reservation.service.RedissonLockService;
+import com.example.eightflix.domain.reservation.service.ReservationLockStrategy;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,13 +15,13 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 public class ReservationController {
-	private final RedissonLockService redissonLockService;
+	private final ReservationLockStrategy DBLockService;
 
 	@PostMapping("/reservations")
 	public void reserveMovie(
 		// @AuthenticationPrincipal User user,
 		@Valid @RequestBody ReservationRequest reservationRequest
 	) throws InterruptedException {
-		redissonLockService.reserveMovie(1L, reservationRequest);
+		DBLockService.reserveMovie(1L, reservationRequest);
 	}
 }

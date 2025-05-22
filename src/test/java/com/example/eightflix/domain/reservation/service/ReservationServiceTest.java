@@ -34,7 +34,7 @@ import com.example.eightflix.global.exception.BizException;
 @ActiveProfiles("test")
 class ReservationServiceTest {
 	@Autowired
-	private DBLockService dbLockService;
+	private ReservationLockStrategy redissonLockService;
 
 	@Autowired
 	private MovieRepository movieRepository;
@@ -89,7 +89,7 @@ class ReservationServiceTest {
 					List.of("A1", "A2")
 				);
 
-				dbLockService.reserveMovie(userId, request);
+				redissonLockService.reserveMovie(userId, request);
 				successCount.getAndIncrement();  // 성공
 			} catch (BizException ex) {
 				throw ex;
@@ -126,7 +126,7 @@ class ReservationServiceTest {
 			executorService.submit(() -> {
 				try {
 					barrier.await(); // 모든 스레드가 여기서 대기하다가 동시에 실행됨
-					dbLockService.reserveMovie(userId, requests.get(finalI));
+					redissonLockService.reserveMovie(userId, requests.get(finalI));
 					successCount.getAndIncrement();  // 성공
 				} catch (BizException e) {
 					throw e;

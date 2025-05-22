@@ -28,15 +28,12 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
-public class RedissonLockService {
+public class RedissonLockService implements ReservationLockStrategy {
 	private final MovieRepository movieRepository;
 	private final SeatRepository seatRepository;
 	private final UserRepository userRepository;
 	private final ReservationService reservationService;
 	private final RedissonClient redissonClient;
-
-	private static final int MIN_SEAT_COUNT = 1;
-	private static final int MAX_SEAT_COUNT = 5;
 
 	public void reserveMovie(Long userId, ReservationRequest reservationRequest) {
 		// movieId 검증
@@ -51,10 +48,10 @@ public class RedissonLockService {
 		validateSeatCount(reservationRequest.reservationSeats().size());  // 좌석 개수 제한
 		validateSeats(validSeats, reservationRequest.reservationSeats());  // 유효한 좌석인지 검증
 
-		reserveMovieWithLock(reservationRequest, user, movie);
+		reserveMovieWithRedissonLock(reservationRequest, user, movie);
 	}
 
-	private void reserveMovieWithLock(ReservationRequest reservationRequest, User user, Movie movie) {
+	private void reserveMovieWithRedissonLock(ReservationRequest reservationRequest, User user, Movie movie) {
 		// lockKeys 생성
 		List<String> lockKeys = reservationRequest.reservationSeats().stream()
 			.map(seat -> "lock:seat:" + reservationRequest.movieId() + ":" + seat)
@@ -84,24 +81,6 @@ public class RedissonLockService {
 					lock.unlock();  // 락이 현재 스레드가 획득한 상태일 때만 락 해제
 				}
 			}
-		}
-	}
-
-	private static void validateSeats(List<Seat> validSeats, List<String> reservationSeats) {
-		List<String> validSeatCodes = validSeats.stream()
-			.map(Seat::getSeatCode)
-			.toList();
-
-		for (String reservationSeat : reservationSeats) {
-			if (!validSeatCodes.contains(reservationSeat)) {
-				throw new BizException(UNAVAILABLE_SEAT_ERROR);
-			}
-		}
-	}
-
-	private static void validateSeatCount(int seatSize) {
-		if (seatSize > MAX_SEAT_COUNT || seatSize < MIN_SEAT_COUNT) {
-			throw new BizException(UNAVAILABLE_SEAT_COUNT_ERROR);
 		}
 	}
 }

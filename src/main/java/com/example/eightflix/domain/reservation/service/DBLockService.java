@@ -25,14 +25,11 @@ import lombok.AllArgsConstructor;
  */
 @Service
 @AllArgsConstructor
-public class DBLockService {
+public class DBLockService implements ReservationLockStrategy {
 	private final MovieRepository movieRepository;
 	private final SeatRepository seatRepository;
 	private final UserRepository userRepository;
 	private final ReservationService reservationService;
-
-	private static final int MIN_SEAT_COUNT = 1;
-	private static final int MAX_SEAT_COUNT = 5;
 
 	@Transactional
 	public void reserveMovie(Long userId, ReservationRequest reservationRequest) {
@@ -44,28 +41,10 @@ public class DBLockService {
 
 		// 좌석 검증
 		List<Seat> validSeats =
-			seatRepository.findValidSeatCodes(reservationRequest.reservationSeats(), reservationRequest.movieId());
+			seatRepository.findValidSeatCodesWithLock(reservationRequest.reservationSeats(), reservationRequest.movieId());
 		validateSeatCount(reservationRequest.reservationSeats().size());  // 좌석 개수 제한
 		validateSeats(validSeats, reservationRequest.reservationSeats());  // 유효한 좌석인지 검증
 
 		reservationService.reserveMovie(user, movie, reservationRequest);
-	}
-
-	private static void validateSeats(List<Seat> validSeats, List<String> reservationSeats) {
-		List<String> validSeatCodes = validSeats.stream()
-			.map(Seat::getSeatCode)
-			.toList();
-
-		for (String reservationSeat : reservationSeats) {
-			if (!validSeatCodes.contains(reservationSeat)) {
-				throw new BizException(UNAVAILABLE_SEAT_ERROR);
-			}
-		}
-	}
-
-	private static void validateSeatCount(int seatSize) {
-		if (seatSize > MAX_SEAT_COUNT || seatSize < MIN_SEAT_COUNT) {
-			throw new BizException(UNAVAILABLE_SEAT_COUNT_ERROR);
-		}
 	}
 }
