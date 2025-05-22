@@ -1,8 +1,10 @@
 package com.example.eightflix.domain.food.service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,9 @@ public class CartItemService {
 	private final FoodRepository foodRepository;
 	private final CartRepository cartRepository;
 	private final FoodServiceUtil serviceUtil;
+	private final RedissonClient redissonClient;
+
+	private static final String FOOD_LOCK_PREFIX = "LOCK:STOCK:";
 
 	@Transactional
 	public ItemResponse createItems(Long foodId,Long cartId,int quantity) {
@@ -81,7 +86,31 @@ public class CartItemService {
 			Food food = cartItem.getFood();
 			int quantity = cartItem.getQuantity();
 
-			serviceUtil.decreaseFood(food,quantity);
+			String lockKey = FOOD_LOCK_PREFIX + food.getId(); // 락 키를  "LOCK:STOCK:{id}" 형태로 생성
+			RLock lock = redissonClient.getLock(lockKey); // 분산 락 객체
+
+			boolean isLocked = false;
+
+			try {
+				isLocked = lock.tryLock(3,5, TimeUnit.SECONDS); // 최대 3초 기다리고 획득 후 5초뒤 자동 만료
+				if(!isLocked){
+					throw new BizException(FoodErrorCode.LOCK_FAILED);
+				}
+
+				serviceUtil.decreaseFood(food,quantity);
+			} catch (InterruptedException e) {
+				/* Thread.interrupt() 메서드는 스레드를 중간에 종료시킬 수 있는 메서드
+				*  다만 모든 상황에서 스레드가 종료되는건 아님
+				*  그 이유는 쓰레드가 일시 정지 상태일때만 정지 시킴
+				*  즉 , 원하는 조건 및 시점에서 스레드를 종료시키기 위한 함수임
+				* */
+				Thread.currentThread().interrupt();
+				throw new BizException(FoodErrorCode.LOCK_INTERRPTED);
+			} finally {
+				if(isLocked && lock.isHeldByCurrentThread()){
+					lock.unlock();
+				}
+			}
 		}
 
 		cartItemRepository.deleteAllByCartId(cartId);
