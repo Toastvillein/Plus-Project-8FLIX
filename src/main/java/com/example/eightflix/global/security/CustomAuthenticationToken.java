@@ -23,6 +23,16 @@ public class CustomAuthenticationToken extends AbstractAuthenticationToken {
         super.setAuthenticated(true); // 인증 완료로 설정
     }
 
+    public CustomAuthenticationToken(Object principal, Object credentials,
+                                     Collection<? extends GrantedAuthority> authorities) {
+        super(authorities);
+        this.principal = principal;
+        this.credentials = credentials;
+        this.email = null;
+        this.nickname = null;
+        super.setAuthenticated(true);
+    }
+
     @Override
     public Object getCredentials() {
         return credentials;

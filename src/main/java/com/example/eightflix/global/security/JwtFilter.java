@@ -30,8 +30,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest httpRequest, HttpServletResponse httpResponse, FilterChain filterChain) throws IOException, ServletException {
-
-        if (httpRequest.getRequestURI().startsWith("/api/auth")) {
+        if (SecurityUrlMatcher.isPublicUrl(httpRequest.getRequestURI()) ||
+                SecurityUrlMatcher.isRefreshUrl(httpRequest.getRequestURI())) {
             filterChain.doFilter(httpRequest, httpResponse);
             return;
         }
