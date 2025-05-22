@@ -25,6 +25,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Testcontainers
@@ -154,4 +155,25 @@ public class ReviewTest {
 
     }
 
+
+
+    @Test
+    void 로컬캐시적용하면빠를까(){
+        Long movieId = 1L;
+        int page = 0;
+        int size = 10;
+        Sort.Direction direction = Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page,size, Sort.by(direction, "createdAt"));
+        long start = System.currentTimeMillis();
+        Page<ReviewResponse> responses = reviewService.findReviews(movieId, pageable);
+        long end = System.currentTimeMillis();
+
+        Page<ReviewResponse> responsesCache = reviewService.findReviews(movieId, pageable);
+        long startCache = System.currentTimeMillis();
+        responsesCache = reviewService.findReviews(movieId, pageable);
+        long endCache = System.currentTimeMillis();
+        System.out.println((end-start) + " " + (endCache - startCache));
+        assertTrue(end - start > endCache - startCache);
+
+    }
 }
