@@ -7,7 +7,6 @@ import static com.example.eightflix.domain.user.exception.UserErrorCode.*;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import com.example.eightflix.domain.movie.entity.Movie;
 import com.example.eightflix.domain.movie.repository.MovieRepository;
@@ -29,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 public class LockService {
 	private final RedisLockRepository redisLockRepository;
 	private final ReservationService reservatonService;
-	private final TransactionTemplate transactionTemplate;
 	private final SeatRepository seatRepository;
 	private final MovieRepository movieRepository;
 	private final UserRepository userRepository;
