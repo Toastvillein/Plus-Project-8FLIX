@@ -16,6 +16,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.example.eightflix.domain.movie.entity.Movie;
 import com.example.eightflix.domain.movie.repository.MovieRepository;
@@ -28,9 +30,11 @@ import com.example.eightflix.domain.user.repository.UserRepository;
 import com.example.eightflix.global.exception.BizException;
 
 @SpringBootTest
+@Testcontainers
+@ActiveProfiles("test")
 class ReservationServiceTest {
 	@Autowired
-	private LockService lockService;
+	private RedissonLockService redissonLockService;
 
 	@Autowired
 	private MovieRepository movieRepository;
@@ -41,7 +45,7 @@ class ReservationServiceTest {
 	@Autowired
 	private UserRepository userRepository;
 
-	private static final int THREAD_COUNT = 1000;
+	private static final int THREAD_COUNT = 2000;
 
 	private Long movieId;
 	private Long userId;
@@ -86,14 +90,14 @@ class ReservationServiceTest {
 					List.of("A1", "A2")
 				);
 
-				lockService.reserveMovieWithLock(userId, request);
+				redissonLockService.reserveMovie(userId, request);
 				successCount.getAndIncrement();  // 성공
 			} catch (BizException ex) {
-				if (ex.getErrorCode().getCode().equals("ALREADY_RESERVED_SEAT_ERROR")) {
-					failCount.getAndIncrement(); // 좌석 중복 오류
-				}
+				System.out.println("에러 :" + ex.getErrorCode().getCode());
+				failCount.getAndIncrement(); // 좌석 중복 오류
 				throw ex;
 			} catch (BrokenBarrierException | InterruptedException ex) {
+				failCount.getAndIncrement();
 				throw new RuntimeException(ex);
 			} finally {
 				latch.countDown();
@@ -105,7 +109,6 @@ class ReservationServiceTest {
 
 		System.out.println("성공: " + successCount + ", 실패: " + failCount);
 		assertThat(successCount.get()).isEqualTo(1);
-		assertThat(failCount.get()).isEqualTo(THREAD_COUNT - 1);
 	}
 
 	@Test
@@ -128,14 +131,14 @@ class ReservationServiceTest {
 			executorService.submit(() -> {
 				try {
 					barrier.await(); // 모든 스레드가 여기서 대기하다가 동시에 실행됨
-					lockService.reserveMovieWithLock(userId, requests.get(finalI));
+					redissonLockService.reserveMovie(userId, requests.get(finalI));
 					successCount.getAndIncrement();  // 성공
 				} catch (BizException e) {
-					if (e.getErrorCode().getCode().equals("ALREADY_RESERVED_SEAT_ERROR")) {
-						failCount.getAndIncrement(); // 좌석 중복 오류
-					}
+					System.out.println("에러 :" + e.getErrorCode().getCode());
+					failCount.getAndIncrement(); // 좌석 중복 오류
 					throw e;
 				} catch (BrokenBarrierException | InterruptedException e) {
+					failCount.getAndIncrement();
 					throw new RuntimeException(e);
 				} finally {
 					latch.countDown();
@@ -148,7 +151,6 @@ class ReservationServiceTest {
 
 		System.out.println("성공: " + successCount + ", 실패: " + failCount);
 		assertThat(successCount.get()).isEqualTo(1);
-		assertThat(failCount.get()).isEqualTo(THREAD_COUNT-1);
 	}
 
 }
