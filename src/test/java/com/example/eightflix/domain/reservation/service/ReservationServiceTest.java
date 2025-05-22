@@ -34,7 +34,7 @@ import com.example.eightflix.global.exception.BizException;
 @ActiveProfiles("test")
 class ReservationServiceTest {
 	@Autowired
-	private RedissonLockService redissonLockService;
+	private DBLockService dbLockService;
 
 	@Autowired
 	private MovieRepository movieRepository;
@@ -75,7 +75,6 @@ class ReservationServiceTest {
 	@DisplayName("동일한 영화 좌석 예매 시 동시성 제어에 성공한다.")
 	void reserveMovieConcurrencyTest() throws Exception {
 		AtomicInteger successCount = new AtomicInteger();
-		AtomicInteger failCount = new AtomicInteger();
 
 		ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
 		CyclicBarrier barrier = new CyclicBarrier(THREAD_COUNT);
@@ -90,14 +89,11 @@ class ReservationServiceTest {
 					List.of("A1", "A2")
 				);
 
-				redissonLockService.reserveMovie(userId, request);
+				dbLockService.reserveMovie(userId, request);
 				successCount.getAndIncrement();  // 성공
 			} catch (BizException ex) {
-				System.out.println("에러 :" + ex.getErrorCode().getCode());
-				failCount.getAndIncrement(); // 좌석 중복 오류
 				throw ex;
 			} catch (BrokenBarrierException | InterruptedException ex) {
-				failCount.getAndIncrement();
 				throw new RuntimeException(ex);
 			} finally {
 				latch.countDown();
@@ -107,7 +103,7 @@ class ReservationServiceTest {
 		latch.await(); // 모든 스레드 종료 대기
 		executorService.shutdown();
 
-		System.out.println("성공: " + successCount + ", 실패: " + failCount);
+		System.out.println("성공: " + successCount);
 		assertThat(successCount.get()).isEqualTo(1);
 	}
 
@@ -115,7 +111,6 @@ class ReservationServiceTest {
 	@DisplayName("일부만 겹치는 영화 좌석 예매 시 동시성 제어에 성공한다.")
 	void reserveDuplicateSeatConcurrencyTest() throws Exception {
 		AtomicInteger successCount = new AtomicInteger();
-		AtomicInteger failCount = new AtomicInteger();
 
 		ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
 		CyclicBarrier barrier = new CyclicBarrier(THREAD_COUNT);
@@ -131,14 +126,11 @@ class ReservationServiceTest {
 			executorService.submit(() -> {
 				try {
 					barrier.await(); // 모든 스레드가 여기서 대기하다가 동시에 실행됨
-					redissonLockService.reserveMovie(userId, requests.get(finalI));
+					dbLockService.reserveMovie(userId, requests.get(finalI));
 					successCount.getAndIncrement();  // 성공
 				} catch (BizException e) {
-					System.out.println("에러 :" + e.getErrorCode().getCode());
-					failCount.getAndIncrement(); // 좌석 중복 오류
 					throw e;
 				} catch (BrokenBarrierException | InterruptedException e) {
-					failCount.getAndIncrement();
 					throw new RuntimeException(e);
 				} finally {
 					latch.countDown();
@@ -149,7 +141,7 @@ class ReservationServiceTest {
 		latch.await(); // 모든 스레드 종료 대기
 		executorService.shutdown();
 
-		System.out.println("성공: " + successCount + ", 실패: " + failCount);
+		System.out.println("성공: " + successCount);
 		assertThat(successCount.get()).isEqualTo(1);
 	}
 
