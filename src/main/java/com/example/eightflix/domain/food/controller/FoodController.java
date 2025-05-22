@@ -22,13 +22,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/foods")
+@RequestMapping("/api/foods")
 @RequiredArgsConstructor
 public class FoodController {
 
 	private final FoodService foodService;
 
-	@PostMapping
+	@PostMapping("/admin")
 	public ResponseEntity<FoodResponse> saveFood(@Valid @RequestBody FoodSaveRequest request){
 
 		FoodResponse foods = foodService.saveFood(request);
@@ -36,7 +36,7 @@ public class FoodController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(foods);
 	}
 
-	@PatchMapping
+	@PatchMapping("/admin")
 	public ResponseEntity<FoodResponse> updateFood(@Valid @RequestBody FoodUpdateRequest request){
 
 		FoodResponse foodResponse = foodService.updateFood(request);
@@ -52,7 +52,7 @@ public class FoodController {
 		return ResponseEntity.status(HttpStatus.OK).body(allFoods);
 	}
 
-	@DeleteMapping("{foodId}")
+	@DeleteMapping("/admin/{foodId}")
 	public ResponseEntity<Void> deleteFood(@PathVariable Long foodId){
 
 		foodService.deleteFood(foodId);

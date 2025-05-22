@@ -8,6 +8,8 @@ import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.eightflix.domain.food.dto.request.ChangeQuantityRequest;
+import com.example.eightflix.domain.food.dto.response.ChangeQuantityResponse;
 import com.example.eightflix.domain.food.dto.response.ItemResponse;
 import com.example.eightflix.domain.food.entity.Cart;
 import com.example.eightflix.domain.food.entity.CartItem;
@@ -19,6 +21,7 @@ import com.example.eightflix.domain.food.repository.CartRepository;
 import com.example.eightflix.domain.food.repository.FoodRepository;
 import com.example.eightflix.global.exception.BizException;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -102,10 +105,10 @@ public class CartItemService {
 				/* Thread.interrupt() 메서드는 스레드를 중간에 종료시킬 수 있는 메서드
 				*  다만 모든 상황에서 스레드가 종료되는건 아님
 				*  그 이유는 쓰레드가 일시 정지 상태일때만 정지 시킴
-				*  즉 , 원하는 조건 및 시점에서 스레드를 종료시키기 위한 함수임
+				*  즉, 원하는 조건 및 시점에서 스레드를 종료시키기 위한 함수임
 				* */
 				Thread.currentThread().interrupt();
-				throw new BizException(FoodErrorCode.LOCK_INTERRPTED);
+				throw new BizException(FoodErrorCode.LOCK_INTERRUPTED);
 			} finally {
 				if(isLocked && lock.isHeldByCurrentThread()){
 					lock.unlock();
@@ -114,5 +117,23 @@ public class CartItemService {
 		}
 
 		cartItemRepository.deleteAllByCartId(cartId);
+	}
+
+	@Transactional
+	public ChangeQuantityResponse changeQuantity(ChangeQuantityRequest request, Long cartItemId) {
+
+		CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(
+			() -> new BizException(FoodErrorCode.INVALID_ID));
+
+		int updatedQuantity = cartItem.getQuantity()+request.quantity();
+
+		if(cartItem.getQuantity()<=0){
+			deleteItems(cartItemId);
+			return new ChangeQuantityResponse(0);
+		}
+
+		cartItem.updateQuantity(updatedQuantity);
+
+		return ChangeQuantityResponse.from(cartItem);
 	}
 }
