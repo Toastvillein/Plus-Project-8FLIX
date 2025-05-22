@@ -30,12 +30,21 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BizException(UserErrorCode.INVALID_PASSWORD);
         }
+        return getTokenPair(user);
+    }
 
+    private TokenPair getTokenPair(User user) {
         String accessToken = jwtUtil.createAccessToken(user.getId(), user.getEmail(), user.getNickname(), user.getRole());
         String refreshToken = jwtUtil.createRefreshToken(user.getId());
         String refreshTokenSubString =  jwtUtil.substringToken(refreshToken);
-        tokenRepository.saveRefreshToken(user.getUserId(), refreshTokenSubString);
+        tokenRepository.saveRefreshToken(String.valueOf(user.getId()), refreshTokenSubString);
 
         return new TokenPair(accessToken, refreshTokenSubString);
+    }
+
+    public TokenPair reissue(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new BizException(UserErrorCode.NOT_FOUND_USER));
+        return getTokenPair(user);
     }
 }
