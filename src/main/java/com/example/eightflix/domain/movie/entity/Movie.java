@@ -12,18 +12,19 @@ import lombok.NoArgsConstructor;
 @Getter
 public class Movie {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long movieId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long movieId;
 
-    @Column(nullable = false, length = 20)
-    private String name;
+	@Column(nullable = false, length = 20)
+	private String name;
 
-    public Movie(String name) {
-        this.name = name;
-    }
+	public Movie(String name) {
+		this.name = name;
+	}
 
-    public void updateName(String name) {
-        this.name = name;
-    }
+	public void updateName(String name) {
+		this.name = name;
+	}
 }
+
