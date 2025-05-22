@@ -12,7 +12,7 @@ public interface ReservationLockStrategy {
 	int MIN_SEAT_COUNT = 1;
 	int MAX_SEAT_COUNT = 5;
 
-	void reserveMovie(Long userId, ReservationRequest reservationRequest) throws InterruptedException;
+	void reserveMovie(Long userId, ReservationRequest reservationRequest);
 
 	default void validateSeats(List<Seat> validSeats, List<String> reservationSeats) {
 		List<String> validSeatCodes = validSeats.stream()

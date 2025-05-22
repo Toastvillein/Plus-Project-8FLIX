@@ -32,7 +32,7 @@ public class LockService implements ReservationLockStrategy {
 	private final MovieRepository movieRepository;
 	private final UserRepository userRepository;
 
-	public void reserveMovie(Long userId, ReservationRequest reservationRequest) throws InterruptedException {
+	public void reserveMovie(Long userId, ReservationRequest reservationRequest) {
 		// movieId 검증
 		Movie movie = movieRepository.findById(reservationRequest.movieId())
 			.orElseThrow(() -> new BizException(MOVIE_NOT_FOUND));
@@ -48,7 +48,7 @@ public class LockService implements ReservationLockStrategy {
 		reserveMovieWithLock(reservationRequest, user, movie);
 	}
 
-	private void reserveMovieWithLock(ReservationRequest reservationRequest, User user, Movie movie) throws InterruptedException {
+	private void reserveMovieWithLock(ReservationRequest reservationRequest, User user, Movie movie) {
 		List<String> lockKeys = reservationRequest.reservationSeats().stream()
 			.map(seat -> "lock:seat:" + reservationRequest.movieId() + ":" + seat)
 			.sorted()
@@ -71,6 +71,8 @@ public class LockService implements ReservationLockStrategy {
 
 			// 락 획득이 완료되면 트랜잭션 시작
 			reservatonService.reserveMovie(user, movie, reservationRequest);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
 		} finally {
 			redisLockRepository.unlock(lockKeys);
 		}
