@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +31,8 @@ public class RedisConfig {
 
     @Value("${spring.data.redis.port}")
     private int port;
+
+    private static final String REDISSON_PREFIX = "redis://";
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
@@ -74,5 +79,15 @@ public class RedisConfig {
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(config)
                 .build();
+    }
+
+    // Reidsson 구현
+    @Bean
+    public RedissonClient redissonClient() {
+        Config config = new Config();
+        config.useSingleServer()
+            .setAddress(REDISSON_PREFIX + host + ":"+ port);
+
+        return Redisson.create(config);
     }
 }
