@@ -24,10 +24,9 @@ import java.util.Set;
 public class ReviewRedisService {
 
     private final ReviewRepository reviewRepository;
-    @Autowired
-    private StringRedisTemplate redisTemplate;
 
-    private final CacheManager cacheManager;
+    private final StringRedisTemplate redisTemplate;
+
 
     public void evictReviewsOfMovie(Long movieId) {
         Set<String> keys = redisTemplate.keys("reviewRedisCacheStore::movieReviews:" + movieId + ":*");
@@ -36,9 +35,9 @@ public class ReviewRedisService {
         }
     }
 
-    public ReviewRedisService(ReviewRepository reviewRepository, CacheManager cacheManager) {
+    public ReviewRedisService(ReviewRepository reviewRepository, StringRedisTemplate redisTemplate) {
         this.reviewRepository = reviewRepository;
-        this.cacheManager = cacheManager;
+        this.redisTemplate  = redisTemplate;
     }
 
     @Transactional
