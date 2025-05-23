@@ -29,7 +29,17 @@ CREATE TABLE cart (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 ) ENGINE=InnoDB;
 
 INSERT INTO cart(id, created_at, modified_at, deleted_at)
-VALUES (1,NOW(),NOW(),NULL);
+VALUES (1,NOW(),NOW(),NULL),
+       (2,NOW(),NOW(),NULL),
+       (3,NOW(),NOW(),NULL),
+       (4,NOW(),NOW(),NULL),
+       (5,NOW(),NOW(),NULL),
+       (6,NOW(),NOW(),NULL),
+       (7,NOW(),NOW(),NULL),
+       (8,NOW(),NOW(),NULL),
+       (9,NOW(),NOW(),NULL),
+       (10,NOW(),NOW(),NULL),
+       (11,NOW(),NOW(),NULL);
 
 CREATE TABLE cart_item (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                         quantity int NOT NULL ,
@@ -45,6 +55,15 @@ CREATE TABLE cart_item (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 
 INSERT INTO cart_item(id, quantity, cart_id, food_id, created_at, modified_at, deleted_at)
 VALUES (1,10,1,3,NOW(),NOW(),NULL),
-       (2,10,1,2,NOW(),NOW(),NULL),
+       (2,1000,1,2,NOW(),NOW(),NULL),
        (3,10,1,1,NOW(),NOW(),NULL),
-       (4,10,1,5,NOW(),NOW(),NULL);
+       (4,1,2,1,NOW(),NOW(),NULL),
+       (5,1,3,1,NOW(),NOW(),NULL),
+       (6,1,4,1,NOW(),NOW(),NULL),
+       (7,1,5,1,NOW(),NOW(),NULL),
+       (8,1,6,1,NOW(),NOW(),NULL),
+       (9,1,7,1,NOW(),NOW(),NULL),
+       (10,1,8,1,NOW(),NOW(),NULL),
+       (11,1,9,1,NOW(),NOW(),NULL),
+       (12,1,10,1,NOW(),NOW(),NULL),
+       (13,1,11,1,NOW(),NOW(),NULL);
