@@ -52,8 +52,7 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:mysql'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-
-
+    testImplementation 'org.assertj:assertj-core:3.24.2'
 }
 
 tasks.named('test') {

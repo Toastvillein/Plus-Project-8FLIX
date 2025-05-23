@@ -4,7 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 public class BizException extends RuntimeException {
-	private ErrorCode errorCode;
+	private final ErrorCode errorCode;
+
+	public BizException(ErrorCode errorCode) {
+		super(errorCode.getMessage());
+		this.errorCode = errorCode;
+	}
 }
