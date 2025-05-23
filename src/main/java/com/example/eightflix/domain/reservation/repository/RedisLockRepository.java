@@ -16,7 +16,7 @@ public class RedisLockRepository {
 	public Boolean lock(String key){
 		return redisTemplate
 			.opsForValue()
-			.setIfAbsent(key, "lock", Duration.ofMillis(3000));
+			.setIfAbsent(key, "lock", Duration.ofSeconds(60));
 	}
 
 	public Long unlock(List<String> key){
