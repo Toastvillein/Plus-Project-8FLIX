@@ -5,14 +5,17 @@ import static com.example.eightflix.domain.reservation.exception.ReservationErro
 import static com.example.eightflix.domain.user.exception.UserErrorCode.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.redisson.RedissonMultiLock;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import com.example.eightflix.domain.movie.entity.Movie;
 import com.example.eightflix.domain.movie.repository.MovieRepository;
 import com.example.eightflix.domain.reservation.dto.request.ReservationRequest;
 import com.example.eightflix.domain.reservation.entity.Seat;
-import com.example.eightflix.domain.reservation.repository.RedisLockRepository;
 import com.example.eightflix.domain.reservation.repository.SeatRepository;
 import com.example.eightflix.domain.user.entity.User;
 import com.example.eightflix.domain.user.repository.UserRepository;
@@ -21,16 +24,16 @@ import com.example.eightflix.global.exception.BizException;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Lettuce 사용한 락 구현
+ * Redisson 사용한 락 구현
  */
 @Service
 @RequiredArgsConstructor
-public class LockService implements ReservationLockStrategy {
-	private final RedisLockRepository redisLockRepository;
-	private final ReservationService reservatonService;
-	private final SeatRepository seatRepository;
+public class RedissonLockService implements ReservationLockStrategy {
 	private final MovieRepository movieRepository;
+	private final SeatRepository seatRepository;
 	private final UserRepository userRepository;
+	private final ReservationService reservationService;
+	private final RedissonClient redissonClient;
 
 	public void reserveMovie(Long userId, ReservationRequest reservationRequest) {
 		// movieId 검증
@@ -45,36 +48,39 @@ public class LockService implements ReservationLockStrategy {
 		validateSeatCount(reservationRequest.reservationSeats().size());  // 좌석 개수 제한
 		validateSeats(validSeats, reservationRequest.reservationSeats());  // 유효한 좌석인지 검증
 
-		reserveMovieWithLock(reservationRequest, user, movie);
+		reserveMovieWithRedissonLock(reservationRequest, user, movie);
 	}
 
-	private void reserveMovieWithLock(ReservationRequest reservationRequest, User user, Movie movie) {
+	private void reserveMovieWithRedissonLock(ReservationRequest reservationRequest, User user, Movie movie) {
+		// lockKeys 생성
 		List<String> lockKeys = reservationRequest.reservationSeats().stream()
 			.map(seat -> "lock:seat:" + reservationRequest.movieId() + ":" + seat)
-			.sorted()
 			.toList();
 
-		int maxAttempts = 30;
+		// 각 key에 대해 RLock 객체 생성
+		List<RLock> locks = lockKeys.stream()
+			.map(redissonClient::getLock)
+			.toList();
+
+		// RedissonMultiLock 생성
+		RLock multiLock = new RedissonMultiLock(locks.toArray(new RLock[0]));
 
 		try {
-			// 트랜잭션 전에 좌석에 대한 모든 락을 먼저 획득
-			for (String key : lockKeys) {
-				int attempts = 0;
-				while (!redisLockRepository.lock(key)) {
-					Thread.sleep(100);
-					if (++attempts > maxAttempts) {
-						redisLockRepository.unlock(lockKeys); // 기존 락 해제
-						throw new BizException(ALREADY_RESERVED_SEAT_ERROR);
-					}
-				}
+			// 멀티락 획득
+			boolean locked = multiLock.tryLock(10, 30, TimeUnit.SECONDS);
+			if (!locked) {
+				throw new BizException(CANNOT_GET_LOCK);
 			}
 
-			// 락 획득이 완료되면 트랜잭션 시작
-			reservatonService.reserveMovie(user, movie, reservationRequest);
+			reservationService.reserveMovie(user, movie, reservationRequest);
 		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
+			throw new BizException(INTERRUPTED_LOCK);
 		} finally {
-			redisLockRepository.unlock(lockKeys);
+			for (RLock lock : locks) {
+				if (lock.isLocked() && lock.isHeldByCurrentThread()) {
+					lock.unlock();  // 락이 현재 스레드가 획득한 상태일 때만 락 해제
+				}
+			}
 		}
 	}
 }

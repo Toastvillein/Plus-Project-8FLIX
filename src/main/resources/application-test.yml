@@ -5,4 +5,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
+        show_sql: false
+        format_sql: false
     open-in-view: false

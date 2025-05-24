@@ -24,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -166,7 +169,39 @@ public class ReviewTest {
     @Test
     void 캐시적용하면빠를까(){
         Long movieId = 1L;
-        int page = 0;
+        Long userId = 2L;
+        // 데이터 없으면 100만 개 삽입
+        if (reviewRepository.count() < 5_000_00) {
+            System.out.println("리뷰 100만 개 삽입 시작...");
+            List<Review> buffer = new ArrayList<>();
+            for (int i = 0; i < 5_000_00; i++) {
+                Review review = Review.builder()
+                        .contents("재밌었어요 " + i)
+                        .rate(4.5f)
+                        .movieId(movieId)
+                        .userId(userId++)
+                        .build();
+
+                buffer.add(review);
+
+                // 1만 건마다 저장 및 flush
+                if (i % 10_000 == 0 && i > 0) {
+                    reviewRepository.saveAll(buffer);
+                    reviewRepository.flush(); // 영속성 컨텍스트 → DB 반영
+                    buffer.clear();
+                    System.out.println(i + "개 저장 완료");
+                }
+            }
+
+            if (!buffer.isEmpty()) {
+                reviewRepository.saveAll(buffer);
+                reviewRepository.flush();
+            }
+            System.out.println("리뷰 삽입 완료");
+        }
+
+
+        int page = 500000;
         int size = 10;
         Sort.Direction direction = Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page,size, Sort.by(direction, "createdAt"));
