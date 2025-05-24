@@ -7,11 +7,14 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -179,17 +182,27 @@ public class CartItemTest {
 
 	@Test
 	void 결제_동시성_이슈_테스트() throws InterruptedException {
-		int threadCount = 10;
-		ExecutorService executor = Executors.newFixedThreadPool(10);
+		int threadCount = 11;
+		ExecutorService executor = Executors.newFixedThreadPool(11);
 		CountDownLatch latch = new CountDownLatch(threadCount);
+		CyclicBarrier barrier = new CyclicBarrier(threadCount);
 
+		AtomicInteger successCount = new AtomicInteger();
+		AtomicInteger failCount = new AtomicInteger();
 
 		for(int i = 0; i < threadCount; i++){
 			long cartId = i+2L;
 			executor.submit( () -> {
 				try {
+					barrier.await();
 					cartItemService.foodPayment(cartId);
-				} finally {
+					successCount.incrementAndGet();
+				} catch (BizException e) {
+					// 예외 코드 확인해서 실패가 락 문제(FoodErrorCode.LOCK_FAILED)일 경우
+					failCount.incrementAndGet();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}  finally {
 					latch.countDown();
 				}
 			});
@@ -199,9 +212,15 @@ public class CartItemTest {
 		executor.shutdown();
 
 		Food food = foodRepository.findById(1L).orElseThrow();
+		assertThat(food.getQuantity()).isEqualTo(0); // before = 1000
+		assertThat(food.getFoodStatus()).isEqualTo(FoodStatus.SOLD_OUT);
 
-		assertThat(food.getQuantity()).isEqualTo(990); // actual 999
-		assertThat(food.getFoodStatus()).isEqualTo(FoodStatus.FOR_SALE);
+		// 성공 카트는 삭제됨, 실패 카트는 남아 있음
 		assertThat(cartItemRepository.findAllByCart(2L)).isEmpty();
+		assertThat(cartItemRepository.findAllByCart(12L)).isNotNull();
+
+		// 성공 수 10, 실패 수 1
+		assertThat(successCount.get()).isEqualTo(10);
+		assertThat(failCount.get()).isEqualTo(1);
 	}
 }
