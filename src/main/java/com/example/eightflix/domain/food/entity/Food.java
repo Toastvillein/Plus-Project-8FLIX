@@ -3,7 +3,9 @@ package com.example.eightflix.domain.food.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.eightflix.domain.food.exception.FoodErrorCode;
 import com.example.eightflix.global.entity.BaseEntity;
+import com.example.eightflix.global.exception.BizException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -57,7 +59,17 @@ public class Food extends BaseEntity {
 	}
 
 	public void updateQuantity(int quantity){
-		this.quantity = quantity;
+		if(this.quantity < quantity){
+			throw new BizException(FoodErrorCode.INVALID_FOODSTATUS);
+		}
+
+		int result = this.quantity-quantity;
+
+		if(result==0){
+			this.foodStatus = FoodStatus.SOLD_OUT;
+		}
+
+		this.quantity = result;
 	}
 
 	public void updateFoodStatus(FoodStatus foodStatus){

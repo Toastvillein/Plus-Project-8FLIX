@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.eightflix.domain.food.entity.Cart;
 import com.example.eightflix.domain.food.entity.CartItem;
@@ -22,7 +23,8 @@ public interface CartItemRepository extends JpaRepository<CartItem,Long> {
 	@Query("SELECT i FROM CartItem i JOIN FETCH i.food WHERE i.cart.id = :cartId")
 	List<CartItem> findAllByCart(@Param("cartId") Long cartId);
 
-	@Modifying
+	@Transactional
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query("DELETE FROM CartItem i WHERE i.cart.id = :cartId")
 	void deleteAllByCartId(Long cartId);
 }
