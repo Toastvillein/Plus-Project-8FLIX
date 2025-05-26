@@ -26,6 +26,7 @@ import com.example.eightflix.domain.user.entity.User;
 import com.example.eightflix.domain.user.entity.UserRole;
 import com.example.eightflix.domain.user.repository.UserRepository;
 import com.example.eightflix.global.exception.BizException;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 class ReservatonServiceTest {

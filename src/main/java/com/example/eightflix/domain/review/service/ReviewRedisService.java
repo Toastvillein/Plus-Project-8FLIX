@@ -7,12 +7,8 @@ import com.example.eightflix.domain.review.entity.Review;
 import com.example.eightflix.domain.review.exception.ReviewErrorCode;
 import com.example.eightflix.domain.review.repository.ReviewRepository;
 import com.example.eightflix.global.exception.BizException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -33,6 +29,9 @@ public class ReviewRedisService {
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
         }
+        // 평점 캐시도 함께 삭제
+        redisTemplate.delete("reviewRateCacheStore::movieRate:" + movieId);
+
     }
 
     public ReviewRedisService(ReviewRepository reviewRepository, StringRedisTemplate redisTemplate) {
@@ -85,5 +84,13 @@ public class ReviewRedisService {
         }
         findReview.softDelete();
         evictReviewsOfMovie(movieId);
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "reviewRateCacheStore", key = "'movieRate:' + #movieId")
+    public Float getRateMovie(Long movieId){
+        Float avgRate = reviewRepository.calculateAverageRateByMovieId(movieId);
+        // 평균 평점이 null이면 0.0f 반환
+        return avgRate != null ? avgRate : 0.0f;
     }
 }
